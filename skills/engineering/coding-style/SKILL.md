@@ -17,143 +17,33 @@ Clean code is readable, maintainable, and predictable. These guidelines ensure c
 
 ALWAYS create new objects, NEVER mutate existing ones.
 
-```typescript
-// WRONG: Mutates original object - hidden side effect
-function updateName(user: User, newName: string) {
-  user.name = newName;
-  return user;
-}
-
-// CORRECT: Returns new object - no side effects
-function updateName(user: User, newName: string): User {
-  return { ...user, name: newName };
-}
-```
-
-```python
-# WRONG: Modifies list in-place
-def add_item(items, item):
-    items.append(item)
-    return items
-
-# CORRECT: Returns new list
-def add_item(items, item):
-    return items + [item]
-```
-
-**Rationale**: Immutable data prevents hidden side effects, makes debugging easier, enables safe concurrency, and simplifies reasoning about code state.
+See [immutability.md](immutability.md) for complete guidelines and examples.
 
 ### File Organization
 
-MANY SMALL FILES > FEW LARGE FILES:
+MANY SMALL FILES > FEW LARGE FILES.
 
-- **Size targets**: 200-400 lines typical, 800 lines maximum
-- **High cohesion**: Each file has one clear responsibility
-- **Low coupling**: Files depend on abstractions, not implementations
-- **Feature-based organization**: Group by domain/feature, not by type
-
-```
-GOOD structure:
-src/
-  features/
-    auth/
-      login.ts        # Login logic (~150 lines)
-      signup.ts       # Signup logic (~180 lines)
-      validators.ts   # Auth validation (~120 lines)
-    cart/
-      cart.ts         # Cart operations (~200 lines)
-      checkout.ts     # Checkout flow (~250 lines)
-
-BAD structure:
-src/
-  controllers.ts      # 2000+ lines of everything
-  services.ts         # 1500+ lines of everything
-  models.ts           # 1000+ lines of everything
-```
-
-When a file exceeds 400 lines, ask: "Can I extract a cohesive piece into its own module?"
+See [file-organization.md](file-organization.md) for complete organization strategies.
 
 ## Core Principles
 
 ### KISS (Keep It Simple)
 
-- Prefer the simplest solution that actually works
-- Avoid premature optimization
-- Optimize for clarity over cleverness
-- If you can't explain it simply, it's too complex
+Prefer the simplest solution that actually works. Optimize for clarity over cleverness.
 
-```typescript
-// WRONG: Overly clever one-liner
-const result = data.filter(x => x.active).map(x => x.value).reduce((a, b) => a + b, 0);
-
-// CORRECT: Clear step-by-step
-const activeItems = data.filter(item => item.active);
-const values = activeItems.map(item => item.value);
-const total = values.reduce((sum, value) => sum + value, 0);
-```
+See [principles.md](principles.md) for detailed explanations.
 
 ### DRY (Don't Repeat Yourself)
 
-- Extract repeated logic into shared functions or utilities
-- Avoid copy-paste implementation drift
-- Introduce abstractions when repetition is real (3+ occurrences), not speculative
+Extract repeated logic into shared functions. Wait for 3+ occurrences before abstracting.
 
-```typescript
-// WRONG: Duplicated validation logic
-function createUser(data) {
-  if (!data.email || !isValidEmail(data.email)) {
-    throw new Error('Invalid email');
-  }
-  // ...
-}
-
-function updateUser(id, data) {
-  if (!data.email || !isValidEmail(data.email)) {
-    throw new Error('Invalid email');
-  }
-  // ...
-}
-
-// CORRECT: Extracted validation
-function validateEmail(email: string): void {
-  if (!email || !isValidEmail(email)) {
-    throw new Error('Invalid email');
-  }
-}
-
-function createUser(data) {
-  validateEmail(data.email);
-  // ...
-}
-
-function updateUser(id, data) {
-  validateEmail(data.email);
-  // ...
-}
-```
+See [principles.md](principles.md) for detailed guidelines.
 
 ### YAGNI (You Aren't Gonna Need It)
 
-- Do not build features or abstractions before they are needed
-- Avoid speculative generality
-- Start simple, then refactor when the pressure is real
+Do not build features or abstractions before they are needed. Start simple, refactor when pressure is real.
 
-```typescript
-// WRONG: Premature abstraction for hypothetical future needs
-interface PaymentProcessor {
-  process(amount: number): Promise<void>;
-  refund(transactionId: string): Promise<void>;
-  subscribe(plan: Plan): Promise<void>;
-  cancelSubscription(subscriptionId: string): Promise<void>;
-}
-
-// CORRECT: Build what you need now
-async function processPayment(amount: number): Promise<void> {
-  // Simple implementation for current requirement
-}
-```
-
-Add complexity only when you have actual use cases demanding it.
+See [principles.md](principles.md) for detailed guidelines.
 
 ## Standards
 
@@ -257,89 +147,21 @@ const canEdit = user.id === post.authorId;
 
 ### Deep Nesting
 
-Prefer early returns over nested conditionals once the logic starts stacking (>3 levels).
+Prefer early returns over nested conditionals (>3 levels triggers refactoring).
 
-```typescript
-// WRONG: Deep nesting (4 levels)
-function processOrder(order: Order) {
-  if (order.items.length > 0) {
-    if (order.paymentMethod) {
-      if (order.paymentMethod.isValid()) {
-        if (order.total > 0) {
-          return charge(order);
-        }
-      }
-    }
-  }
-  return null;
-}
-
-// CORRECT: Early returns (flat structure)
-function processOrder(order: Order) {
-  if (order.items.length === 0) return null;
-  if (!order.paymentMethod) return null;
-  if (!order.paymentMethod.isValid()) return null;
-  if (order.total <= 0) return null;
-  
-  return charge(order);
-}
-```
+See [code-smells.md](code-smells.md) for examples and solutions.
 
 ### Magic Numbers
 
 Use named constants for meaningful thresholds, delays, and limits.
 
-```typescript
-// WRONG: Magic numbers
-setTimeout(() => retry(), 5000);
-if (items.length > 100) {
-  throw new Error('Too many items');
-}
-const discount = price * 0.15;
-
-// CORRECT: Named constants
-const RETRY_DELAY_MS = 5000;
-const MAX_ITEMS_PER_ORDER = 100;
-const LOYALTY_DISCOUNT_RATE = 0.15;
-
-setTimeout(() => retry(), RETRY_DELAY_MS);
-if (items.length > MAX_ITEMS_PER_ORDER) {
-  throw new Error(`Exceeded maximum of ${MAX_ITEMS_PER_ORDER} items`);
-}
-const discount = price * LOYALTY_DISCOUNT_RATE;
-```
+See [code-smells.md](code-smells.md) for examples.
 
 ### Long Functions
 
-Split large functions into focused pieces with clear responsibilities (<50 lines target).
+Split large functions into focused pieces (<50 lines target).
 
-```typescript
-// WRONG: Long function doing too much
-function processCheckout(cart: Cart) {
-  // Validate cart (30 lines)
-  // Calculate totals (20 lines)
-  // Apply discounts (25 lines)
-  // Process payment (30 lines)
-  // Update inventory (20 lines)
-  // Send confirmation (15 lines)
-  // Total: 140 lines
-}
-
-// CORRECT: Composed from focused functions
-function processCheckout(cart: Cart) {
-  validateCart(cart);
-  const totals = calculateTotals(cart);
-  const finalAmount = applyDiscounts(totals);
-  const payment = processPayment(finalAmount);
-  updateInventory(cart.items);
-  sendConfirmation(payment);
-}
-```
-
-Each extracted function should:
-- Have a single responsibility
-- Be testable in isolation
-- Have a descriptive name
+See [code-smells.md](code-smells.md) for extraction techniques.
 
 ## Quality Checklist
 
