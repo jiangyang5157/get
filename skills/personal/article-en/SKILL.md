@@ -11,4 +11,4 @@ Confirm the sections with the user.
 
 2. For each section:
 
-Rewrite the section to improve clarity, coherence, and flow.
+Rewrite the section to improve clarity, coherence, and flow. Use maximum 240 characters per paragraph.
