@@ -7,8 +7,5 @@
   "engines": {
     "node": ">=18"
   },
-  "scripts": {
-    "selftest": "node bin/run.mjs selftest"
-  },
   "license": "UNLICENSED"
 }

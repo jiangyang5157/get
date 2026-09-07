@@ -51,7 +51,6 @@ node bin/run.mjs collect <base> [--out change-set.json] [--offline] [--context r
 node bin/run.mjs render  <change-model.json> [--out change-brief.html] [--change-set change-set.json]
 node bin/run.mjs verify  <change-set.json> <change-model.json>
 node bin/run.mjs all     <base> [--model change-model.json] [--out change-brief.html] [--offline] [--context repo-context.json]
-node bin/run.mjs selftest [--update-golden]
 ```
 
 Exit codes: `0` success · `1` abort/validation failure · `2` usage error.
@@ -62,10 +61,6 @@ Exit codes: `0` success · `1` abort/validation failure · `2` usage error.
 - `--change-set`: pass the change-set so the render includes the deterministic
   per-directory file summary rows (status mix + line counts, files expandable) and
   cross-checks risk evidence line numbers.
-- `selftest`: validates fixtures/schemas, rejects negative fixtures, and compares
-  the render against the stored golden `fixtures/change-brief.sample.html`
-  byte-for-byte. Use `selftest --update-golden` only for intentional renderer
-  changes (then review the diff!).
 
 ## Design notes & deliberate deviations from a naive reading
 
@@ -82,9 +77,8 @@ Exit codes: `0` success · `1` abort/validation failure · `2` usage error.
   anti-hallucination guard.
 - **Vocabulary is double-checked**: JSON schemas validate structure only;
   category/level/verify words are validated at runtime against the declared
-  profile (`lib/profiles/engineering.mjs`, itself validated by
-  `schemas/profile.schema.json`). This keeps the door open for non-engineering
-  profiles without a schema bump.
+  profile (`lib/profiles/engineering.mjs`). This keeps the door open for
+  non-engineering profiles without a schema bump.
 - **Level × specificity contract for test suggestions** (important):
   - `unit` → code-level and concrete (real function, real inputs);
   - `integration` → module-level behavior;

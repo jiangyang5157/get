@@ -1,5 +1,5 @@
 // Engineering domain profile (v1).
-// Validated against schemas/profile.schema.json on load.
+// Vocabulary + tag rules for the engineering domain (see schemas for shape).
 export default {
   id: 'engineering',
   labels: {

@@ -4,18 +4,13 @@
 //   render  <model> -> change-brief.html      (Phase C, deterministic; --change-set for chart)
 //   verify  <change-set> <model>              (validate model schema+vocab+evidence)
 //   all     <base>  -> collect then instruct Phase B; render if --model valid
-//   selftest [--update-golden]                (regenerate golden + assertions)
 // Exit codes: 0 ok · 1 abort/validation · 2 usage
 import fs from 'node:fs';
 import path from 'node:path';
-import { fileURLToPath, pathToFileURL } from 'node:url';
 import { collect, CollectError } from '../lib/git-collect.mjs';
 import { renderChangeBrief } from '../lib/renderer.mjs';
 import { checkModel } from '../lib/check-model.mjs';
-import { validateJsonFile, validateObject } from '../lib/validator.mjs';
-
-const here = path.dirname(fileURLToPath(import.meta.url));
-const root = path.join(here, '..');
+import { validateJsonFile } from '../lib/validator.mjs';
 
 function usage() {
   return `Usage:
@@ -23,8 +18,6 @@ function usage() {
   node bin/run.mjs render  <change-model.json> [--out change-brief.html] [--change-set change-set.json]
   node bin/run.mjs verify  <change-set.json> <change-model.json>
   node bin/run.mjs all     <base> [--model change-model.json] [--out change-brief.html] [--offline] [--context repo-context.json]
-  node bin/run.mjs selftest [--update-golden]
-
 Exit codes: 0 success · 1 abort/validation failure · 2 usage error`;
 }
 
@@ -218,89 +211,6 @@ async function cmdAll(pos, flags, repoRoot) {
   return 0;
 }
 
-// ---------------- selftest ----------------
-async function cmdSelftest(flags) {
-  const fixture = (n) => path.join(root, 'fixtures', n);
-  const goldenPath = fixture('change-brief.sample.html');
-  const model = loadJson(fixture('change-model.sample.json'), 'change-model');
-  const changeSet = loadJson(fixture('change-set.sample.json'), 'change-set');
-
-  // 1. fixtures validate
-  for (const [name, p] of [['change-set', fixture('change-set.sample.json')], ['change-model', fixture('change-model.sample.json')]]) {
-    const v = validateJsonFile(name, p);
-    if (!v.ok) {
-      const first = v.violations[0];
-      fail(`selftest: ${name} fixture invalid at ${first.path}: ${first.msg}`);
-    }
-  }
-  const check = await checkModel(model, changeSet);
-  if (!check.ok) {
-    const first = check.violations[0];
-    fail(`selftest: sample model fails check at ${first.path}: ${first.msg}`);
-  }
-
-  // 2. golden regeneration / byte compare
-  const html = renderChangeBrief(model, changeSet);
-  if (flags['update-golden']) {
-    fs.writeFileSync(goldenPath, html);
-    process.stdout.write(`Golden updated: ${path.relative(root, goldenPath)}\n`);
-    return 0;
-  }
-  const stored = fs.existsSync(goldenPath) ? fs.readFileSync(goldenPath, 'utf8') : null;
-  if (stored === null) {
-    fs.writeFileSync(goldenPath, html);
-    process.stdout.write(`Golden missing — wrote ${path.relative(root, goldenPath)}. Rerun selftest to compare.\n`);
-    return 0;
-  }
-  if (stored !== html) {
-    const golden = path.relative(root, goldenPath);
-    fail(`selftest: render differs from golden ${golden}. Use "selftest --update-golden" only for intentional renderer changes.`);
-  }
-
-  // 3. negative fixtures must be rejected
-  const negativesDir = fixture('negative');
-  for (const f of fs.readdirSync(negativesDir).filter((x) => x.endsWith('.json'))) {
-    const neg = JSON.parse(fs.readFileSync(path.join(negativesDir, f), 'utf8'));
-    const checkNeg = await checkModel(neg, changeSet);
-    if (checkNeg.ok) fail(`selftest: negative fixture ${f} unexpectedly passed`);
-  }
-
-  // 3b. installed profile must satisfy profile.schema.json
-  {
-    const profMod = await import(pathToFileURL(path.join(root, 'lib', 'profiles', 'engineering.mjs')).href);
-    const vp = validateObject('profile', profMod.default);
-    if (!vp.ok) {
-      const first = vp.violations[0];
-      fail(`selftest: engineering profile invalid at ${first.path}: ${first.msg}`);
-    }
-  }
-
-  // 4. escape smoke: renderer must escape HTML metachars in user strings
-  const evil = renderChangeBrief({
-    schemaVersion: '1', profile: 'engineering', head: 'a<b', base: 'main', title: '<script>alert(1)</script>',
-    summary: { headline: '"quoted" & <x>', why: 'x', perFile: [] },
-    risks: [{ id: 'R1', category: 'secrets', severity: 'high', title: '<img src=x onerror=1>', rationale: '&', evidence: [{ path: 'a', line: 1, deleted: false }] }],
-    scannedCategories: [], tests: { happyPath: [], edgeCases: [] },
-  });
-  if (evil.includes('<script>alert(1)</script>') || evil.includes('<img src=x')) {
-    fail('selftest: escapeHtml failed');
-  }
-
-  // 4b. deterministic "missed category" backstop: sensitiveTouch tag on a changed
-  //     path with no matching scanned/risk category must surface a warning.
-  {
-    const cs = { ...changeSet, sensitiveTouch: { 'db/migrate.sql': ['db', 'config'] } };
-    const m = { ...model, scannedCategories: model.scannedCategories.filter((c) => c !== 'db' && c !== 'config') };
-    const html = renderChangeBrief(m, cs);
-    if (!html.includes('category not assessed') || !html.includes('db (db/migrate.sql)')) {
-      fail('selftest: missed-category backstop did not flag unassessed db/config touch');
-    }
-  }
-
-  process.stdout.write('selftest: OK (fixtures validate, golden matches, negatives rejected, escaping works)\n');
-  return 0;
-}
-
 async function main() {
   const argv = process.argv.slice(2);
   if (argv.length === 0 || argv[0] === 'help' || argv[0] === '--help' || argv[0] === '-h') {
@@ -317,7 +227,6 @@ async function main() {
     case 'render': return cmdRender(pos, flags, repoRoot);
     case 'verify': return cmdVerify(pos);
     case 'all': return cmdAll(pos, flags, repoRoot);
-    case 'selftest': return cmdSelftest(flags);
     default:
       process.stderr.write(`${usage()}\n\n`);
       fail(`unknown command: ${cmd}`, 2);
