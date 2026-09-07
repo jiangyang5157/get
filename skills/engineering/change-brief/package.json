@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "private": true,
   "type": "module",
-  "description": "Local-only git change brief: branch diff -> change model -> curated HTML review artifact (three deterministic/LLM phases).",
+  "description": "Local git change brief: deterministic collect/render scripts + one LLM pass in chat, into a curated HTML review (what changed, risks, test ideas). Zero deps, nothing uploaded.",
   "engines": {
     "node": ">=18"
   },
