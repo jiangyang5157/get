@@ -1,6 +1,6 @@
 # File System
 .DS_Store
-.vsc-chat-trail
+.change-brief/
 
 # IDE
 .vscode/
