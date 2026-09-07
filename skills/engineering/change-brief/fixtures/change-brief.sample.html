@@ -3,223 +3,257 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Change Brief · feat/tax → main</title>
+<title>Apply sales tax at checkout with cent-precision rounding · feat/tax → main</title>
 <style>
-:root{--ink:#1c2430;--mut:#5c6b7a;--line:#e2e8ee;--add:#1a7f37;--del:#c62828;--amber:#b45309;--bg:#ffffff;}
+:root{--ink:#1c2430;--mut:#5c6b7a;--line:#e2e8ee;--add:#1a7f37;--del:#c62828;--amber:#b45309;--chip:#eef2f6;--chipline:#d8e0e8;}
 *{box-sizing:border-box}
-body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue","PingFang SC","Microsoft YaHei",sans-serif;color:var(--ink);background:var(--bg);line-height:1.45;padding:0 0 40px}
-.wrap{max-width:980px;margin:0 auto;padding:0 20px}
-header.top{padding:22px 0 6px;border-bottom:2px solid var(--line);margin-bottom:18px}
-h1{font-size:20px;margin:0 0 4px}
-h2{font-size:14px;text-transform:uppercase;letter-spacing:.06em;color:var(--mut);margin:26px 0 8px;padding-top:14px;border-top:1px solid var(--line)}
-h3{font-size:15px;margin:14px 0 6px}
-.headline{font-size:17px;margin:2px 0 6px}
-.lede{font-size:15px;font-weight:600}
-.meta{font-size:12px;color:var(--mut)}
-.kpi{display:inline-block;margin:0 12px 0 0;font-size:13px}
-.kpi b{font-size:15px}
-.diff-add{color:var(--add);font-weight:600}
-.diff-del{color:var(--del);font-weight:600}
-.chip{display:inline-block;border-radius:999px;padding:1px 8px;font-size:11px;line-height:1.6;margin:1px 2px;background:#eef2f6;border:1px solid #d8e0e8;-webkit-user-select:all;user-select:all;white-space:nowrap}
+body{margin:0;font:14px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue","PingFang SC","Microsoft YaHei",sans-serif;color:var(--ink);background:#fff;padding:0 0 48px}
+.wrap{max-width:960px;margin:0 auto;padding:0 20px}
+header.top{padding:20px 0 4px;border-bottom:2px solid var(--line);margin-bottom:8px}
+.tool{font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--mut)}
+.meta{font-size:12px;color:var(--mut);display:flex;gap:12px;flex-wrap:wrap;align-items:center}
+.meta .chip{margin:0}
+.doc-title{font-size:20px;font-weight:700;margin:12px 0 2px;line-height:1.3}
+h2{font-size:12px;text-transform:uppercase;letter-spacing:.07em;color:var(--mut);margin:14px 0 6px;padding-top:14px;border-top:1px solid var(--line)}
+h3.sub{font-size:13px;font-weight:600;margin:14px 0 4px}
+.summary-head{font-size:14px;font-weight:600;margin:0 0 6px}
+.summary-body{font-size:14px;margin:0;color:#2b3644}
+.chip{display:inline-block;border-radius:999px;padding:0 8px;font-size:11px;line-height:1.7;margin:1px 2px;background:var(--chip);border:1px solid var(--chipline);-webkit-user-select:all;user-select:all;white-space:nowrap}
 .chip.evidence{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;background:#f1f6fb;border-color:#c9d9ea}
-.chip-id{background:#fff;color:var(--mut);border-color:#d8e0e8}
+.chip-id{background:#fff;color:var(--mut)}
 .chip-cat{background:#eef6ef}
 .chip-st{background:#f4f1ff;border-color:#ddd6f3}
+.st{font-weight:700}
+.dir-mix .st{margin-right:4px}
+.st-A{color:#1a7f37}
+.st-M{color:#2563eb}
+.st-D{color:#c62828}
+.st-R{color:#7c3aed}
+.st-C{color:#7c3aed}
+.st-T{color:#6b7280}
+.st-B{color:#6b7280}
+.chip.st-A{background:#e9f7ee;border-color:#b7e2c6;color:#1a7f37}
+.chip.st-M{background:#eaf1fe;border-color:#b9cdf3;color:#2563eb}
+.chip.st-D{background:#fdecec;border-color:#f0b8b8;color:#c62828}
+.chip.st-R{background:#f3edfd;border-color:#d4c3f4;color:#7c3aed}
+.chip.st-C{background:#f3edfd;border-color:#d4c3f4;color:#7c3aed}
+.chip.st-T{background:#f1f3f5;border-color:#d3d9de;color:#6b7280}
+.chip.st-B{background:#f1f3f5;border-color:#d3d9de;color:#6b7280}
 .chip-lvl{background:#f4f1f1}
 .sev-high{background:#fdecec;border-color:#f2b8b8;color:var(--del);font-weight:600}
 .sev-med{background:#fdf3e3;border-color:#ecd9a8;color:var(--amber);font-weight:600}
 .sev-low{background:#e8f6ec;border-color:#bfe3c9;color:#1a7f37;font-weight:600}
 .warn-chip{background:#fff8e6;border-color:#ead9a8;color:#7c4a03}
-.bar-row{display:flex;align-items:center;gap:10px;margin:5px 0}
-.bar-label{flex:0 0 200px;font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.bar-sub{display:block;color:var(--mut);font-size:10px}
-.bar-track{flex:1;display:flex;height:14px;border-radius:3px;overflow:hidden;background:#f2f5f8}
-.bar-add{background:var(--add);height:100%}
-.bar-del{background:var(--del);height:100%}
-.bar-num{flex:0 0 74px;text-align:right;font-size:11px;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
-.risk-head{display:flex;flex-wrap:wrap;align-items:center;gap:4px}
-.risk-title{font-size:13px;font-weight:600;margin-left:2px}
-.risk-body{margin:4px 0 2px 4px;font-size:12px;color:#2b3644}
-.risk-body p{margin:3px 0}
-.risk-list,.file-list,.commit-list{list-style:none;padding:0;margin:8px 0}
-.risk-row,.edge-row{padding:8px 10px;border:1px solid var(--line);border-radius:6px;margin:6px 0;background:#fbfcfd}
-.file-list li{padding:3px 0;font-size:12px}
-.file-note{color:var(--mut);font-size:11px;margin:1px 0 2px 16px}
-.commit-list li{padding:2px 0;font-size:12px;display:flex;gap:8px;flex-wrap:wrap}
-.commit-subject{flex:1}
+details.dir{margin:0 0 3px}
+details.dir summary{list-style:none;display:flex;align-items:center;gap:10px;cursor:pointer;padding:4px 6px;border-radius:6px;font-size:13px;color:var(--ink)}
+details.dir summary::-webkit-details-marker{display:none}
+details.dir summary:hover{background:#f4f7fa}
+details.dir[open] summary{border-bottom:1px solid var(--line)}
+.dir-name{flex:1 1 auto;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+.dir-mix{flex:0 0 auto;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:11px;color:var(--mut);white-space:nowrap}
+.dir-num{flex:0 0 auto;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:11px;white-space:nowrap}
+.dir-chev{flex:0 0 12px;font-size:10px;color:#b6c2ce;transition:transform .12s;text-align:center}
+details.dir[open] .dir-chev{color:var(--mut);transform:rotate(90deg)}
+details.dir summary:hover .dir-chev{color:var(--mut)}
+details.dir .file-list{margin:2px 0 4px;padding-left:30px;border-left:2px solid var(--line);margin-left:12px}
+.rows{list-style:none;padding:0;margin:6px 0}
+.row{padding:8px 10px;border:1px solid var(--line);border-radius:6px;margin:6px 0;background:#fbfcfd}
+.row-head{display:flex;flex-wrap:wrap;align-items:center;gap:4px}
+.row-title{font-size:13px;font-weight:600;margin-left:2px}
+.row-body{margin:4px 0 0 2px;font-size:12px;color:#2b3644}
+.row-body p{margin:3px 0}
+.row-evidence{margin-top:4px!important}
+.lbl{font-weight:600;color:var(--mut)}
+.file-list{list-style:none;padding:0;margin:4px 0}
+.file-row{padding:3px 0;font-size:12px}
+.file-note{color:var(--mut);font-size:11px;margin:1px 0 2px 12px}
 .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:12px}
-.small{font-size:11px}
 .dim{color:var(--mut);font-size:11px}
-.callout{background:#f0f7ff;border-left:3px solid #7fb0e0;padding:6px 10px;font-size:12px;color:#23405e;border-radius:2px}
-.empty{color:var(--add);font-weight:600;font-size:13px}
-.copyblock{background:#f6f8fa;border:1px solid var(--line);border-radius:6px;padding:10px 12px;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:12px;white-space:pre-wrap;word-break:break-word;-webkit-user-select:all;user-select:all}
-table.tbl{width:100%;border-collapse:collapse;font-size:12px}
-table.tbl th,table.tbl td{text-align:left;padding:4px 6px;border-bottom:1px solid var(--line);vertical-align:top}
-table.tbl th{color:var(--mut);font-weight:600}
-details{margin:8px 0}
-summary{cursor:pointer;font-size:12px;color:#2b4c7e}
-footer{margin-top:30px;padding-top:10px;border-top:1px solid var(--line);font-size:11px}
-@media print{-webkit-print-color-adjust:exact;print-color-adjust:exact;body{font-size:11px}}
+.checked{margin-top:8px}
+.missed{margin:8px 0 0;font-size:12px}
+.missed .chip{margin-left:0}
+.empty{color:var(--add);font-weight:600}
+details{margin:4px 0}
+summary{cursor:pointer;font-size:12px;color:#2b4c7e;padding:2px 0}
+@media print{-webkit-print-color-adjust:exact;print-color-adjust:exact}
 </style>
 </head>
 <body>
 <div class="wrap">
 <header class="top">
-  <h1>Change Brief</h1>
-  <div class="meta">feat/tax → main · <span class="mono">feat/tax…</span> → <span class="mono">main…</span></div>
-  <div class="kpis" style="margin-top:8px"><span class="kpi"><b>5</b> files</span><span class="kpi diff-add">+24</span><span class="kpi diff-del">−1</span><span class="kpi"><b>2</b> commits</span><span class="chip sev-high">1 high-risk</span></div>
+  <div class="tool">Change Brief · schema v1</div>
+  <div class="meta">feat/tax → main<span class="dim">·</span><span class="mono">9f2c1a4e… → 6a1b2c3d…</span></div>
 </header>
+<section class="sec-summary">
+    <h1 class="doc-title">Apply sales tax at checkout with cent-precision rounding</h1>
+    <h2>Summary</h2>
+    <p class="summary-head">Adds applyTax (cent-rounded) and wires it into the pricing total.</p>
+    <p class="summary-body">Two commits: a new applyTax helper with floating-point-safe cent rounding, and a pricing change that now adds tax to the subtotal. The helper is also exported for tests; money.ts adds shared cent conversion helpers and tests/calc.test.ts locks the rounding behaviour.</p>
+  </section>
 <section>
       <h2>What changed</h2>
-      <div class="bar-row">
-          <span class="bar-label">src<span class="bar-sub">4 files · src/calc.js, src/pricing.ts, src/money.ts … +1</span></span>
-          <span class="bar-track">
-            <span class="bar-add" style="width:94%"></span>
-            <span class="bar-del" style="width:6%"></span>
-          </span>
-          <span class="bar-num">+15/−1</span>
-        </div><div class="bar-row">
-          <span class="bar-label">tests<span class="bar-sub">1 file · tests/calc.test.ts</span></span>
-          <span class="bar-track">
-            <span class="bar-add" style="width:56%"></span>
-            <span class="bar-del" style="width:0%"></span>
-          </span>
-          <span class="bar-num">+9/−0</span>
-        </div>
+      <details class="dir">
+          <summary class="dir-summary" title="15 added · 1 deleted across 4 file(s)">
+            <span class="dir-name">src</span>
+            <span class="dir-mix" title="A added · M modified · D deleted · R renamed"><span class="st st-A">2A</span> <span class="st st-M">2M</span></span>
+            <span class="dir-num">+15/−1</span>
+            <span class="dir-chev" aria-hidden="true">▸</span>
+          </summary>
+          <ul class="file-list"><li class="file-row">
+    <span class="mono">src/calc.js</span> <span class="mono dim">+6 −0</span> <span class="chip chip-st st-M">M</span>
+    <div class="file-note">New applyTax helper: raw = amount * rate then Math.round(raw*100)/100; also logs the raw amount.</div>
+  </li><li class="file-row">
+    <span class="mono">src/money.ts</span> <span class="mono dim">+5 −0</span> <span class="chip chip-st st-A">A</span>
+    <div class="file-note">New shared cents conversion helpers to avoid float drift elsewhere.</div>
+  </li><li class="file-row">
+    <span class="mono">src/pricing.ts</span> <span class="mono dim">+2 −1</span> <span class="chip chip-st st-M">M</span>
+    <div class="file-note">Total now includes tax via applyTax(subtotal, TAX_RATE).</div>
+  </li><li class="file-row">
+    <span class="mono">src/格式化.ts</span> <span class="mono dim">+2 −0</span> <span class="chip chip-st st-A">A</span>
+    <div class="file-note">New currency formatting helper (non-ASCII path render check).</div>
+  </li></ul>
+        </details><details class="dir">
+          <summary class="dir-summary" title="9 added · 0 deleted across 1 file(s)">
+            <span class="dir-name">tests</span>
+            <span class="dir-mix" title="A added · M modified · D deleted · R renamed"><span class="st st-A">1A</span></span>
+            <span class="dir-num">+9/−0</span>
+            <span class="dir-chev" aria-hidden="true">▸</span>
+          </summary>
+          <ul class="file-list"><li class="file-row">
+    <span class="mono">tests/calc.test.ts</span> <span class="mono dim">+9 −0</span> <span class="chip chip-st st-A">A</span>
+    <div class="file-note">Unit tests for applyTax rounding, including a repeating-rate case.</div>
+  </li></ul>
+        </details>
       
-      <details><summary>Per-file detail</summary><ul class="file-list"><li><span class="mono">tests/calc.test.ts</span> <span class="mono dim">+9 −0</span> <span class="chip chip-st">A</span><div class="file-note">Unit tests for applyTax rounding, including a repeating-rate case.</div></li><li><span class="mono">src/calc.js</span> <span class="mono dim">+6 −0</span> <span class="chip chip-st">M</span><div class="file-note">New applyTax helper: raw = amount * rate then Math.round(raw*100)/100; also logs the raw amount.</div></li><li><span class="mono">src/money.ts</span> <span class="mono dim">+5 −0</span> <span class="chip chip-st">A</span><div class="file-note">New shared cents conversion helpers to avoid float drift elsewhere.</div></li><li><span class="mono">src/pricing.ts</span> <span class="mono dim">+2 −1</span> <span class="chip chip-st">M</span><div class="file-note">Total now includes tax via applyTax(subtotal, TAX_RATE).</div></li><li><span class="mono">src/格式化.ts</span> <span class="mono dim">+2 −0</span> <span class="chip chip-st">A</span><div class="file-note">New currency formatting helper (non-ASCII path render check).</div></li></ul></details>
     </section>
-<section>
-      <h2>Commits</h2>
-      <ol class="commit-list"><li class="commit-item">
-          <span class="mono">9f2c1a4e</span>
-          <span class="commit-subject">feat: add applyTax with cent rounding</span>
-          <span class="dim">Ada Chen · 2025-06-10</span>
-        </li><li class="commit-item">
-          <span class="mono">3bd08c11</span>
-          <span class="commit-subject">fix: apply tax in pricing total</span>
-          <span class="dim">Ada Chen · 2025-06-11</span>
-        </li></ol>
-      
-    </section>
-<section>
-    <h2>Summary</h2>
-    <h3 class="headline">Apply sales tax at checkout with cent-precision rounding</h3>
-    <p class="lede">Adds applyTax (cent-rounded) and wires it into the pricing total.</p>
-    <p>Two commits: a new applyTax helper with floating-point-safe cent rounding, and a pricing change that now adds tax to the subtotal. The helper is also exported for tests; money.ts adds shared cent conversion helpers and tests/calc.test.ts locks the rounding behaviour.</p>
-    <details><summary>Why each file changed</summary><ul class="file-list"><li><span class="mono">src/calc.js</span><div class="file-note">New applyTax helper: raw = amount * rate then Math.round(raw*100)/100; also logs the raw amount.</div></li><li><span class="mono">src/pricing.ts</span><div class="file-note">Total now includes tax via applyTax(subtotal, TAX_RATE).</div></li><li><span class="mono">src/money.ts</span><div class="file-note">New shared cents conversion helpers to avoid float drift elsewhere.</div></li><li><span class="mono">src/格式化.ts</span><div class="file-note">New currency formatting helper (non-ASCII path render check).</div></li><li><span class="mono">tests/calc.test.ts</span><div class="file-note">Unit tests for applyTax rounding, including a repeating-rate case.</div></li></ul></details>
-  </section>
 <section>
     <h2>Risks</h2>
-    <p class="callout">For reviewers. Evidence points at file:line in the change — select to copy.</p>
-    <ul class="risk-list"><li class="risk-row">
-  <span class="risk-head">
+    <ul class="rows"><li class="row">
+  <div class="row-head">
     <span class="chip chip-id">R1</span>
     <span class="chip sev-high">HIGH</span>
-    <span class="chip chip-cat">behavior</span>
-    <span class="risk-title">Floating-point rounding of amount * rate may drift on edge inputs</span>
-  </span>
-  <div class="risk-body">
-    <p class="risk-rationale">Math.round(raw*100)/100 is not exact decimal arithmetic: rates like 1/3 or amounts with many decimals can round unexpectedly. Tests cover 19.99 * 1/3, but amounts near .005 boundaries are untested and binary floats can produce 14.995 -&gt; 15.00 vs 14.99.</p>
-    <p class="risk-evidence"><span class="chip evidence" title="click to select">src/calc.js:11</span></p>
+    <span class="chip chip-cat" title="behavior: general logic/behavior change — rounding, flows, edge behaviour">behavior</span>
+    <span class="row-title">Floating-point rounding of amount * rate may drift on edge inputs</span>
   </div>
-</li><li class="risk-row">
-  <span class="risk-head">
+  <div class="row-body">
+    <p>Math.round(raw*100)/100 is not exact decimal arithmetic: rates like 1/3 or amounts with many decimals can round unexpectedly. Tests cover 19.99 * 1/3, but amounts near .005 boundaries are untested and binary floats can produce 14.995 -&gt; 15.00 vs 14.99.</p>
+    <p class="row-evidence"><span class="chip evidence" title="click to select">src/calc.js:11</span></p>
+  </div>
+</li><li class="row">
+  <div class="row-head">
     <span class="chip chip-id">R2</span>
     <span class="chip sev-med">MEDIUM</span>
-    <span class="chip chip-cat">logging</span>
-    <span class="risk-title">console.log prints the raw monetary amount</span>
-  </span>
-  <div class="risk-body">
-    <p class="risk-rationale">Raw amounts in server-side logs can be considered sensitive; in enterprise/PCI contexts log content may be retained. Should use the formatted helper or structured logging without the raw value.</p>
-    <p class="risk-evidence"><span class="chip evidence" title="click to select">src/calc.js:10</span></p>
+    <span class="chip chip-cat" title="logging: logging code — check sensitive values are not written to logs">logging</span>
+    <span class="row-title">console.log prints the raw monetary amount</span>
   </div>
-</li><li class="risk-row">
-  <span class="risk-head">
+  <div class="row-body">
+    <p>Raw amounts in server-side logs can be considered sensitive; in enterprise/PCI contexts log content may be retained. Should use the formatted helper or structured logging without the raw value.</p>
+    <p class="row-evidence"><span class="chip evidence" title="click to select">src/calc.js:10</span></p>
+  </div>
+</li><li class="row">
+  <div class="row-head">
     <span class="chip chip-id">R3</span>
     <span class="chip sev-med">MEDIUM</span>
-    <span class="chip chip-cat">behavior</span>
-    <span class="risk-title">Pricing total now includes tax — callers may double-charge</span>
-  </span>
-  <div class="risk-body">
-    <p class="risk-rationale">pricing.ts now adds tax to subtotal. Any other code path that already applied tax would now double-charge. Only this file changed, so reviewers should check remaining callers.</p>
-    <p class="risk-evidence"><span class="chip evidence" title="click to select">src/pricing.ts:6</span></p>
+    <span class="chip chip-cat" title="behavior: general logic/behavior change — rounding, flows, edge behaviour">behavior</span>
+    <span class="row-title">Pricing total now includes tax — callers may double-charge</span>
+  </div>
+  <div class="row-body">
+    <p>pricing.ts now adds tax to subtotal. Any other code path that already applied tax would now double-charge. Only this file changed, so reviewers should check remaining callers.</p>
+    <p class="row-evidence"><span class="chip evidence" title="click to select">src/pricing.ts:6</span></p>
   </div>
 </li></ul>
     
-    <p class="dim">Scanned categories: <span class="chip chip-cat">config</span> <span class="chip chip-cat">db</span> <span class="chip chip-cat">security</span> <span class="chip chip-cat">dependency</span> <span class="chip chip-cat">logging</span> <span class="chip chip-cat">secrets</span> <span class="chip chip-cat">pii</span> <span class="chip chip-cat">exceptions</span> <span class="chip chip-cat">behavior</span></p>
+    
+    <p class="dim checked">Checked: <span class="chip chip-cat" title="config: config/env files — verify values and that no secrets are committed">config</span> <span class="chip chip-cat" title="db: database, migrations, schema, SQL — check destructive changes, locking, data loss">db</span> <span class="chip chip-cat" title="security: auth / authorization / roles / crypto / tokens — check for privilege bypass">security</span> <span class="chip chip-cat" title="dependency: dependency or lock files — supply chain and version compatibility">dependency</span> <span class="chip chip-cat" title="logging: logging code — check sensitive values are not written to logs">logging</span> <span class="chip chip-cat" title="secrets: secret-like files (.env, keys, certs) — values must never be exposed">secrets</span> <span class="chip chip-cat" title="pii: personally identifiable information (names, IDs, phone, card…) — privacy/compliance">pii</span> <span class="chip chip-cat" title="exceptions: error handling — new failure paths must not be swallowed or unguarded">exceptions</span> <span class="chip chip-cat" title="behavior: general logic/behavior change — rounding, flows, edge behaviour">behavior</span></p>
   </section>
 <section>
-    <h2>Test suggestions</h2>
-    <p class="callout">For the author and testers. Unit/integration cases are concrete; e2e cases are behaviour-level — replace {PLACEHOLDERS} with real app flows.</p>
-    <h3>Happy path</h3><table class="tbl"><thead><tr><th>id</th><th>scenario</th><th>input</th><th>expected</th><th>level</th></tr></thead><tbody><tr><td><span class="chip chip-id">H1</span></td><td>applyTax on a normal amount and rate</td><td class="mono small">applyTax(100, 0.1)</td><td>10 (exact cents)</td><td><span class="chip chip-lvl">unit</span></td></tr><tr><td><span class="chip chip-id">H2</span></td><td>pricing total includes tax</td><td class="mono small">subtotal 100 with TAX_RATE 0.1</td><td>total 110</td><td><span class="chip chip-lvl">integration</span></td></tr><tr><td><span class="chip chip-id">H3</span></td><td>checkout shows a tax-inclusive total to the customer</td><td class="mono small">complete {checkout flow} for a tax-inclusive item</td><td>displayed total includes tax; no double charge</td><td><span class="chip chip-lvl">e2e</span></td></tr></tbody></table>
-    
-    <h3>Edge cases</h3><ul class="risk-list"><li class="edge-row">
-  <span class="risk-head">
+    <h2>Test</h2>
+    <h3 class="sub">Happy path</h3><ul class="rows"><li class="row">
+  <div class="row-head">
+    <span class="chip chip-id">H1</span>
+    <span class="chip chip-lvl">unit</span>
+    <span class="row-title">applyTax on a normal amount and rate</span>
+  </div>
+  <div class="row-body">
+    <p><span class="lbl">Input:</span> <span class="mono">applyTax(100, 0.1)</span></p>
+    <p><span class="lbl">Expected:</span> 10 (exact cents)</p>
+  </div>
+</li><li class="row">
+  <div class="row-head">
+    <span class="chip chip-id">H2</span>
+    <span class="chip chip-lvl">integration</span>
+    <span class="row-title">pricing total includes tax</span>
+  </div>
+  <div class="row-body">
+    <p><span class="lbl">Input:</span> <span class="mono">subtotal 100 with TAX_RATE 0.1</span></p>
+    <p><span class="lbl">Expected:</span> total 110</p>
+  </div>
+</li><li class="row">
+  <div class="row-head">
+    <span class="chip chip-id">H3</span>
+    <span class="chip chip-lvl">e2e</span>
+    <span class="row-title">checkout shows a tax-inclusive total to the customer</span>
+  </div>
+  <div class="row-body">
+    <p><span class="lbl">Input:</span> <span class="mono">complete {checkout flow} for a tax-inclusive item</span></p>
+    <p><span class="lbl">Expected:</span> displayed total includes tax; no double charge</p>
+  </div>
+</li></ul>
+    <h3 class="sub">Edge cases</h3><ul class="rows"><li class="row">
+  <div class="row-head">
     <span class="chip chip-id">E1</span>
     <span class="chip sev-high">HIGH</span>
-    <span class="chip chip-cat">precision</span>
+    <span class="chip chip-cat" title="precision: numeric precision, rounding, overflow edge">precision</span>
     <span class="chip chip-lvl">unit</span>
-    <span class="risk-title">amount * rate produces a value exactly at a .005 boundary</span>
-  </span>
-  <div class="risk-body">
-    <p><strong>Why:</strong> binary floats: values like 14.995 can round up or down depending on representation; 1/3 rates never terminate</p>
-    <p><strong>Assert:</strong> result matches cent-rounding policy exactly (no silent 0.01 drift); assert explicit expected values</p>
-    <p class="risk-evidence"><span class="chip evidence">src/calc.js</span></p>
+    <span class="row-title">amount * rate produces a value exactly at a .005 boundary</span>
   </div>
-</li><li class="edge-row">
-  <span class="risk-head">
+  <div class="row-body">
+    <p><span class="lbl">Why:</span> binary floats: values like 14.995 can round up or down depending on representation; 1/3 rates never terminate</p>
+    <p><span class="lbl">Assert:</span> result matches cent-rounding policy exactly (no silent 0.01 drift); assert explicit expected values</p>
+    <p class="row-evidence"><span class="chip evidence">src/calc.js</span></p>
+  </div>
+</li><li class="row">
+  <div class="row-head">
     <span class="chip chip-id">E2</span>
     <span class="chip sev-med">MEDIUM</span>
-    <span class="chip chip-cat">boundary</span>
+    <span class="chip chip-cat" title="boundary: boundary / length / limit edge">boundary</span>
     <span class="chip chip-lvl">unit</span>
-    <span class="risk-title">zero, negative, and very large amounts</span>
-  </span>
-  <div class="risk-body">
-    <p><strong>Why:</strong> float math on extremes can produce NaN/Infinity or unexpected sign handling</p>
-    <p><strong>Assert:</strong> no crash, no NaN, sign preserved or rejected per policy</p>
-    <p class="risk-evidence"><span class="chip evidence">src/calc.js</span></p>
+    <span class="row-title">zero, negative, and very large amounts</span>
   </div>
-</li><li class="edge-row">
-  <span class="risk-head">
+  <div class="row-body">
+    <p><span class="lbl">Why:</span> float math on extremes can produce NaN/Infinity or unexpected sign handling</p>
+    <p><span class="lbl">Assert:</span> no crash, no NaN, sign preserved or rejected per policy</p>
+    <p class="row-evidence"><span class="chip evidence">src/calc.js</span></p>
+  </div>
+</li><li class="row">
+  <div class="row-head">
     <span class="chip chip-id">E3</span>
     <span class="chip sev-med">MEDIUM</span>
-    <span class="chip chip-cat">security</span>
+    <span class="chip chip-cat" title="security: auth / authorization / roles / crypto / tokens — check for privilege bypass">security</span>
     <span class="chip chip-lvl">integration</span>
-    <span class="risk-title">log output containing the raw amount is inspected</span>
-  </span>
-  <div class="risk-body">
-    <p><strong>Why:</strong> server logs may retain raw monetary amounts, a PII/PCI concern in enterprise</p>
-    <p><strong>Assert:</strong> logs must not expose raw amount/PII; prefer formatted value or remove log</p>
-    <p class="risk-evidence"><span class="chip evidence">src/calc.js</span></p>
+    <span class="row-title">log output containing the raw amount is inspected</span>
   </div>
-</li><li class="edge-row">
-  <span class="risk-head">
+  <div class="row-body">
+    <p><span class="lbl">Why:</span> server logs may retain raw monetary amounts, a PII/PCI concern in enterprise</p>
+    <p><span class="lbl">Assert:</span> logs must not expose raw amount/PII; prefer formatted value or remove log</p>
+    <p class="row-evidence"><span class="chip evidence">src/calc.js</span></p>
+  </div>
+</li><li class="row">
+  <div class="row-head">
     <span class="chip chip-id">E4</span>
     <span class="chip sev-med">MEDIUM</span>
-    <span class="chip chip-cat">rollback</span>
+    <span class="chip chip-cat" title="rollback: rollback / atomicity across deploy window">rollback</span>
     <span class="chip chip-lvl">e2e</span>
-    <span class="risk-title">this change is reverted after some orders were priced with tax</span>
-  </span>
-  <div class="risk-body">
-    <p><strong>Why:</strong> orders priced during the change window must remain consistent after rollback</p>
-    <p><strong>Assert:</strong> no double-charge state persists; pricing consistent across deploy windows</p>
-    <p class="risk-evidence"><span class="chip evidence">src/pricing.ts</span></p>
+    <span class="row-title">this change is reverted after some orders were priced with tax</span>
+  </div>
+  <div class="row-body">
+    <p><span class="lbl">Why:</span> orders priced during the change window must remain consistent after rollback</p>
+    <p><span class="lbl">Assert:</span> no double-charge state persists; pricing consistent across deploy windows</p>
+    <p class="row-evidence"><span class="chip evidence">src/pricing.ts</span></p>
   </div>
 </li></ul>
     
-    <p class="dim">Focus files: <span class="chip evidence">src/calc.js</span> <span class="chip evidence">src/pricing.ts</span> <span class="chip evidence">tests/calc.test.ts</span></p>
   </section>
-<section>
-      <h2>CR / PR summary</h2>
-      <pre class="copyblock">Systems affected: pricing/checkout, money utils
-Rollback: Revert both commits; tax stops being added (old behaviour restored).
-Test evidence: tests/calc.test.ts added — run before merge.
-Reviewer note: Check other callers of pricing total for double taxation (R3).
-Reviewer note: Review whether raw-amount logging is acceptable in this environment (R2).</pre>
-      <p class="dim">Plain text — select all to copy.</p>
-    </section>
-<footer class="dim">Change Brief · local-only · no code uploaded · schemaVersion 1</footer>
 </div>
 </body>
 </html>

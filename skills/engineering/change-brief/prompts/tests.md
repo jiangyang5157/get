@@ -2,7 +2,7 @@
 
 Continue the SAME conversation as Prompt 1. The change-model.json you produced is
 the current draft. Your job now: fill its `tests` section. Do NOT change any other
-field (`summary`, `risks`, `crDraft`, `title`, `head`, `base`, `schemaVersion`, `profile`).
+field (`summary`, `risks`, `title`, `head`, `base`, `schemaVersion`, `profile`).
 
 ## Input
 
@@ -57,7 +57,6 @@ Return the COMPLETE updated change-model.json (same object as before, but with
 
 ```jsonc
 "tests": {
-  "focusFiles": [ "paths most affected, for testers (max ~8)" ],
   "happyPath": [
     { "id": "H1", "scenario": "...", "input": "...", "expected": "...",
       "level": "unit|integration|e2e", "verify": "run|read|probe|golden" }

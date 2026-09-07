@@ -86,11 +86,6 @@
     "behavior"
   ],
   "tests": {
-    "focusFiles": [
-      "src/calc.js",
-      "src/pricing.ts",
-      "tests/calc.test.ts"
-    ],
     "happyPath": [
       {
         "id": "H1",
@@ -162,18 +157,6 @@
         "verify": "read",
         "focusFile": "src/pricing.ts"
       }
-    ]
-  },
-  "crDraft": {
-    "affectedSystems": [
-      "pricing/checkout",
-      "money utils"
-    ],
-    "rollbackNote": "Revert both commits; tax stops being added (old behaviour restored).",
-    "testEvidenceNote": "tests/calc.test.ts added — run before merge.",
-    "reviewerNotes": [
-      "Check other callers of pricing total for double taxation (R3).",
-      "Review whether raw-amount logging is acceptable in this environment (R2)."
     ]
   }
 }

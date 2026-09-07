@@ -110,6 +110,7 @@ export async function collect({ base, offline = false, repoContext = null, cwd =
     baseBranch: base, baseRef: null, baseSha: null, mergeBaseSha: null,
     baseAheadCount: 0,
     workingTreeDirty: false,
+    dirtyCount: 0,
     empty: false,
     summaryHint: null,
     totalAdded: 0, totalDeleted: 0,
@@ -127,8 +128,12 @@ export async function collect({ base, offline = false, repoContext = null, cwd =
     out.headSha = runGit(['rev-parse', 'HEAD'], { cwd }).stdout.trim();
   }
 
-  // 2. dirty snapshot (before writing any output)
-  out.workingTreeDirty = runGit(['status', '--porcelain'], { cwd }).stdout.trim() !== '';
+  // 2. dirty snapshot (before writing any output). Exclude the tool's own
+  //    output directory so a previous run does not count itself as dirty.
+  const porcelain = runGit(['status', '--porcelain', '--', '.', ':(exclude).change-brief'], { cwd }).stdout;
+  const dirtyEntries = porcelain.split('\n').filter((l) => l.trim() !== '');
+  out.workingTreeDirty = dirtyEntries.length > 0;
+  out.dirtyCount = dirtyEntries.length;
 
   // 3.-4. refresh + remote existence (skipped when offline)
   const baseRef = `origin/${base}`;

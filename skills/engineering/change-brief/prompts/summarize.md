@@ -35,7 +35,7 @@ deleted lines as removals to call out, not code to describe at length.
 
 Produce a COMPLETE change-model.json object (valid against the schema described in
 `../schemas/change-model.schema.json`). Fill every field EXCEPT `tests`, which you
-set to `{ "focusFiles": [], "happyPath": [], "edgeCases": [] }` — prompt 2 fills it.
+set to `{ "happyPath": [], "edgeCases": [] }` — prompt 2 fills it.
 
 ```jsonc
 {
@@ -58,13 +58,7 @@ set to `{ "focusFiles": [], "happyPath": [], "edgeCases": [] }` — prompt 2 fil
     }
   ],
   "scannedCategories": [ "categories you considered and why N/A" ],
-  "tests": { "focusFiles": [], "happyPath": [], "edgeCases": [] },
-  "crDraft": {
-    "affectedSystems": ["module/area names derived from topDirs + paths"],
-    "rollbackNote": "one-liner or null",
-    "testEvidenceNote": "one-liner or null",
-    "reviewerNotes": ["what reviewers should pay attention to"]
-  }
+  "tests": { "happyPath": [], "edgeCases": [] }
 }
 ```
 
@@ -81,8 +75,7 @@ If `change-set.empty` is true, output exactly:
   "title": "No committed changes",
   "summary": { "headline": "No committed changes vs <base>.", "why": "…", "perFile": [] },
   "risks": [], "scannedCategories": [],
-  "tests": { "focusFiles": [], "happyPath": [], "edgeCases": [] },
-  "crDraft": null }
+  "tests": { "happyPath": [], "edgeCases": [] } }
 ```
 
 Output ONLY the JSON object — no commentary before or after.

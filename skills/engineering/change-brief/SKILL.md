@@ -11,7 +11,7 @@ curated HTML review artifact with three sections of different audiences:
 
 1. **What changed + Risks** → for code reviewers (`file:line` evidence chips).
 2. **Test suggestions** → for the author/testers, to save analysis effort.
-3. **CR/PR paste block** → short markdown to drop into a review/PR description.
+3. **Markdown PR description** → short paste-ready text for a PR/review description.
 
 It deliberately mimics a good reviewer, not a test-automation engine: e2e test
 suggestions are behaviour-level (Given/When/Then with state + error codes) and
@@ -44,7 +44,7 @@ node <this-skill-dir>/bin/run.mjs all main            # collect + prints Phase B
   node <this-skill-dir>/bin/run.mjs render .change-brief/change-model.json \
        --change-set .change-brief/change-set.json
   ```
-  Then open `.change-brief/change-brief.html` or copy the `.md` block.
+  Then open `.change-brief/change-brief.html`.
 
 ## Guardrails for Phase B (the LLM sections)
 

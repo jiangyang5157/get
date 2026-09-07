@@ -7,7 +7,7 @@ Node.js ≥ 18.
 
 ```
 Phase A (git, deterministic)      Phase B (LLM / chat)         Phase C (deterministic)
-HEAD + base ──▶ change-set.json ──▶ change-model.json ──▶ change-brief.html (+ .md)
+HEAD + base ──▶ change-set.json ──▶ change-model.json ──▶ change-brief.html
 ```
 
 - Sections of the artifact about **summary & risks** are for **code reviewers**.
@@ -48,9 +48,9 @@ All three files land in `.change-brief/` (add it to your repo's `.gitignore`):
 
 ```
 node bin/run.mjs collect <base> [--out change-set.json] [--offline] [--context repo-context.json]
-node bin/run.mjs render  <change-model.json> [--out change-brief.html] [--markdown] [--change-set change-set.json]
+node bin/run.mjs render  <change-model.json> [--out change-brief.html] [--change-set change-set.json]
 node bin/run.mjs verify  <change-set.json> <change-model.json>
-node bin/run.mjs all     <base> [--model change-model.json] [--out change-brief.html] [--markdown] [--offline] [--context repo-context.json]
+node bin/run.mjs all     <base> [--model change-model.json] [--out change-brief.html] [--offline] [--context repo-context.json]
 node bin/run.mjs selftest [--update-golden]
 ```
 
@@ -60,8 +60,8 @@ Exit codes: `0` success · `1` abort/validation failure · `2` usage error.
 - `--context repo-context.json`: author-supplied app context that lets the LLM
   write more concrete e2e suggestions (see schema `schemas/repo-context.schema.json`).
 - `--change-set`: pass the change-set so the render includes the deterministic
-  diff chart / commit timeline / KPI and cross-checks risk evidence line numbers.
-- `--markdown`: emit a short CR/PR paste block instead of HTML.
+  per-directory file summary rows (status mix + line counts, files expandable) and
+  cross-checks risk evidence line numbers.
 - `selftest`: validates fixtures/schemas, rejects negative fixtures, and compares
   the render against the stored golden `fixtures/change-brief.sample.html`
   byte-for-byte. Use `selftest --update-golden` only for intentional renderer
@@ -104,8 +104,8 @@ Exit codes: `0` success · `1` abort/validation failure · `2` usage error.
 
 - Filenames containing TAB/newline bytes may not parse correctly (documented;
   enterprise code rarely has them). Non-ASCII and spaces are supported.
-- `render` without `--change-set` omits the deterministic diff chart/commit
-  timeline (those data live in the change-set, not the model).
+- `render` without `--change-set` omits the deterministic diff chart / file
+  stats (those data live in the change-set, not the model).
 - The quality ceiling of sections depends on the LLM used for Phase B; the
   deterministic gates stop *wrong* output, not *mediocre* output.
 
@@ -126,6 +126,21 @@ amount; commit and push; then run `collect main`, hand-write
 one `pii/logging` medium risk with real line numbers), `render`, and confirm the
 HTML shows the rounding test and the logging risk with correct
 `src/calc.js:NN` evidence.
+
+## Uncommitted working-tree changes
+
+`collect` compares **committed** `HEAD` vs `origin/<base>` only — uncommitted
+local edits are never part of the brief. If the working tree is dirty, the run
+still succeeds (exit 0) but:
+
+- `change-set.json` records `workingTreeDirty: true` + `dirtyCount`,
+- the CLI prints a stderr note
+  (`Note: N uncommitted changes are not included — commit or stash first.`),
+- the HTML header shows a "dirty working tree" chip.
+
+The tool's own output directory (`.change-brief/`) is excluded from that count.
+Commit (or stash) before collecting if you want the brief to reflect your latest
+work.
 
 ## Non-goals / later
 

@@ -10,7 +10,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { collect, CollectError } from '../lib/git-collect.mjs';
-import { renderChangeBrief, renderMarkdown } from '../lib/renderer.mjs';
+import { renderChangeBrief } from '../lib/renderer.mjs';
 import { checkModel } from '../lib/check-model.mjs';
 import { validateJsonFile, validateObject } from '../lib/validator.mjs';
 
@@ -20,9 +20,9 @@ const root = path.join(here, '..');
 function usage() {
   return `Usage:
   node bin/run.mjs collect <base> [--out change-set.json] [--offline] [--context repo-context.json]
-  node bin/run.mjs render  <change-model.json> [--out change-brief.html] [--markdown] [--change-set change-set.json]
+  node bin/run.mjs render  <change-model.json> [--out change-brief.html] [--change-set change-set.json]
   node bin/run.mjs verify  <change-set.json> <change-model.json>
-  node bin/run.mjs all     <base> [--model change-model.json] [--out change-brief.html] [--markdown] [--offline] [--context repo-context.json]
+  node bin/run.mjs all     <base> [--model change-model.json] [--out change-brief.html] [--offline] [--context repo-context.json]
   node bin/run.mjs selftest [--update-golden]
 
 Exit codes: 0 success · 1 abort/validation failure · 2 usage error`;
@@ -33,6 +33,8 @@ function fail(msg, code = 1) {
   process.exit(code);
 }
 
+const VALUE_FLAGS = new Set(['out', 'change-set', 'context', 'model']);
+
 function parseFlags(argv) {
   const pos = [];
   const flags = {};
@@ -41,8 +43,13 @@ function parseFlags(argv) {
     if (a.startsWith('--')) {
       const eq = a.indexOf('=');
       const key = eq >= 0 ? a.slice(2, eq) : a.slice(2);
-      const val = eq >= 0 ? a.slice(eq + 1) : argv[++i];
-      flags[key] = val === undefined ? true : val;
+      if (eq >= 0) {
+        flags[key] = a.slice(eq + 1);
+      } else if (VALUE_FLAGS.has(key)) {
+        flags[key] = argv[++i];
+      } else {
+        flags[key] = true; // boolean flag
+      }
     } else pos.push(a);
   }
   return { pos, flags };
@@ -98,6 +105,10 @@ async function cmdCollect(pos, flags, repoRoot) {
   fs.writeFileSync(outPath, JSON.stringify(changeSet, null, 2) + '\n');
   process.stdout.write(`Wrote ${rel(repoRoot, outPath)}\n`);
   if (changeSet.empty) process.stdout.write(`Note: ${changeSet.summaryHint}\n`);
+  if (changeSet.workingTreeDirty) {
+    const n = changeSet.dirtyCount ?? 0;
+    process.stderr.write(`Note: ${n} uncommitted change${n === 1 ? '' : 's'} ${n === 1 ? 'is' : 'are'} not included in this brief — commit or stash first.\n`);
+  }
   return 0;
 }
 
@@ -115,15 +126,13 @@ async function cmdRender(pos, flags, repoRoot) {
     fail(`change-model invalid at ${first.path}: ${first.msg}`);
   }
 
-  const out = flags.markdown ? renderMarkdown(model) : renderChangeBrief(model, changeSet);
-  const outPath = flags.out
-    ? path.resolve(repoRoot, flags.out)
-    : path.join(repoRoot, '.change-brief', flags.markdown ? 'change-brief.md' : 'change-brief.html');
+  const html = renderChangeBrief(model, changeSet);
+  const outPath = flags.out ? path.resolve(repoRoot, flags.out) : path.join(repoRoot, '.change-brief', 'change-brief.html');
   fs.mkdirSync(path.dirname(outPath), { recursive: true });
-  fs.writeFileSync(outPath, out);
+  fs.writeFileSync(outPath, html);
   process.stdout.write(`Wrote ${rel(repoRoot, outPath)}\n`);
-  if (!flags.markdown && !changeSet) {
-    process.stdout.write('Note: no --change-set given; diff chart/commit timeline omitted. Add --change-set to include them.\n');
+  if (!changeSet) {
+    process.stdout.write('Note: no --change-set given; diff chart omitted. Add --change-set to include it.\n');
   }
   return 0;
 }
@@ -177,6 +186,10 @@ async function cmdAll(pos, flags, repoRoot) {
   fs.writeFileSync(csPath, JSON.stringify(changeSet, null, 2) + '\n');
   process.stdout.write(`Wrote ${rel(repoRoot, csPath)}\n`);
   if (changeSet.empty) process.stdout.write(`Note: ${changeSet.summaryHint}\n`);
+  if (changeSet.workingTreeDirty) {
+    const n = changeSet.dirtyCount ?? 0;
+    process.stderr.write(`Note: ${n} uncommitted change${n === 1 ? '' : 's'} ${n === 1 ? 'is' : 'are'} not included in this brief — commit or stash first.\n`);
+  }
 
   // Phase B is the LLM step, external to this CLI.
   const modelPath = flags.model ? path.resolve(repoRoot, flags.model) : path.join(repoRoot, '.change-brief', 'change-model.json');
@@ -267,10 +280,21 @@ async function cmdSelftest(flags) {
     schemaVersion: '1', profile: 'engineering', head: 'a<b', base: 'main', title: '<script>alert(1)</script>',
     summary: { headline: '"quoted" & <x>', why: 'x', perFile: [] },
     risks: [{ id: 'R1', category: 'secrets', severity: 'high', title: '<img src=x onerror=1>', rationale: '&', evidence: [{ path: 'a', line: 1, deleted: false }] }],
-    scannedCategories: [], tests: { focusFiles: [], happyPath: [], edgeCases: [] }, crDraft: null,
+    scannedCategories: [], tests: { happyPath: [], edgeCases: [] },
   });
   if (evil.includes('<script>alert(1)</script>') || evil.includes('<img src=x')) {
     fail('selftest: escapeHtml failed');
+  }
+
+  // 4b. deterministic "missed category" backstop: sensitiveTouch tag on a changed
+  //     path with no matching scanned/risk category must surface a warning.
+  {
+    const cs = { ...changeSet, sensitiveTouch: { 'db/migrate.sql': ['db', 'config'] } };
+    const m = { ...model, scannedCategories: model.scannedCategories.filter((c) => c !== 'db' && c !== 'config') };
+    const html = renderChangeBrief(m, cs);
+    if (!html.includes('category not assessed') || !html.includes('db (db/migrate.sql)')) {
+      fail('selftest: missed-category backstop did not flag unassessed db/config touch');
+    }
   }
 
   process.stdout.write('selftest: OK (fixtures validate, golden matches, negatives rejected, escaping works)\n');

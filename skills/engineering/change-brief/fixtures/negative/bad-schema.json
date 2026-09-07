@@ -3,15 +3,15 @@
   "profile": "engineering",
   "head": "feat/tax",
   "base": "main",
-  "title": "Negative: missing required crDraft + wrong level",
-  "summary": { "headline": "x", "why": "x", "perFile": [] },
+  "summary": {
+    "headline": "x",
+    "why": "x",
+    "perFile": []
+  },
   "risks": [],
   "scannedCategories": [],
   "tests": {
-    "focusFiles": [],
-    "happyPath": [
-      { "id": "H1", "scenario": "x", "input": "x", "expected": "x", "level": "system", "verify": "run" }
-    ],
+    "happyPath": [],
     "edgeCases": []
   }
 }

@@ -56,12 +56,5 @@ export function checkEvidence(model, changeSet) {
       }
     }
   }
-  // tests.focusFile should name an actual changed path (or a prefix dir)
-  for (const [ti, f] of ((model.tests || {}).focusFiles || []).entries()) {
-    const known =
-      (changeSet.files || []).some((x) => x.path === f) ||
-      (changeSet.files || []).some((x) => x.path.startsWith(f.endsWith('/') ? f : f + '/'));
-    if (!known) out.push({ path: `tests.focusFiles[${ti}]`, msg: `"${f}" is not a changed path/dir in the change set` });
-  }
   return out;
 }

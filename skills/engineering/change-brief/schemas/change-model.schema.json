@@ -5,31 +5,63 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
-    "schemaVersion", "profile", "head", "base", "title",
-    "summary", "risks", "scannedCategories", "tests", "crDraft"
+    "schemaVersion",
+    "profile",
+    "head",
+    "base",
+    "title",
+    "summary",
+    "risks",
+    "scannedCategories",
+    "tests"
   ],
   "properties": {
-    "schemaVersion": { "const": "1" },
-    "profile": { "type": "string" },
-    "head": { "type": "string" },
-    "base": { "type": "string" },
-    "title": { "type": "string" },
+    "schemaVersion": {
+      "const": "1"
+    },
+    "profile": {
+      "type": "string"
+    },
+    "head": {
+      "type": "string"
+    },
+    "base": {
+      "type": "string"
+    },
+    "title": {
+      "type": "string"
+    },
     "summary": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["headline", "why", "perFile"],
+      "required": [
+        "headline",
+        "why",
+        "perFile"
+      ],
       "properties": {
-        "headline": { "type": "string" },
-        "why": { "type": "string" },
+        "headline": {
+          "type": "string"
+        },
+        "why": {
+          "type": "string"
+        },
         "perFile": {
           "type": "array",
           "items": {
             "type": "object",
             "additionalProperties": false,
-            "required": ["path", "note"],
+            "required": [
+              "path",
+              "note"
+            ],
             "properties": {
-              "path": { "type": "string" },
-              "note": { "type": "string" }
+              "path": {
+                "type": "string"
+              },
+              "note": {
+                "type": "string"
+              }
             }
           }
         }
@@ -40,23 +72,52 @@
       "items": {
         "type": "object",
         "additionalProperties": false,
-        "required": ["id", "category", "severity", "title", "rationale", "evidence"],
+        "required": [
+          "id",
+          "category",
+          "severity",
+          "title",
+          "rationale",
+          "evidence"
+        ],
         "properties": {
-          "id": { "type": "string", "pattern": "^R[0-9]+$" },
-          "category": { "type": "string" },
-          "severity": { "type": "string" },
-          "title": { "type": "string" },
-          "rationale": { "type": "string" },
+          "id": {
+            "type": "string",
+            "pattern": "^R[0-9]+$"
+          },
+          "category": {
+            "type": "string"
+          },
+          "severity": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "rationale": {
+            "type": "string"
+          },
           "evidence": {
             "type": "array",
             "items": {
               "type": "object",
               "additionalProperties": false,
-              "required": ["path", "line", "deleted"],
+              "required": [
+                "path",
+                "line",
+                "deleted"
+              ],
               "properties": {
-                "path": { "type": "string" },
-                "line": { "type": "integer", "minimum": 1 },
-                "deleted": { "type": "boolean" }
+                "path": {
+                  "type": "string"
+                },
+                "line": {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                "deleted": {
+                  "type": "boolean"
+                }
               }
             }
           }
@@ -65,30 +126,51 @@
     },
     "scannedCategories": {
       "type": "array",
-      "items": { "type": "string" }
+      "items": {
+        "type": "string"
+      }
     },
     "tests": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["focusFiles", "happyPath", "edgeCases"],
+      "required": [
+        "happyPath",
+        "edgeCases"
+      ],
       "properties": {
-        "focusFiles": {
-          "type": "array",
-          "items": { "type": "string" }
-        },
         "happyPath": {
           "type": "array",
           "items": {
             "type": "object",
             "additionalProperties": false,
-            "required": ["id", "scenario", "input", "expected", "level", "verify"],
+            "required": [
+              "id",
+              "scenario",
+              "input",
+              "expected",
+              "level",
+              "verify"
+            ],
             "properties": {
-              "id": { "type": "string", "pattern": "^H[0-9]+$" },
-              "scenario": { "type": "string" },
-              "input": { "type": "string" },
-              "expected": { "type": "string" },
-              "level": { "type": "string" },
-              "verify": { "type": "string" }
+              "id": {
+                "type": "string",
+                "pattern": "^H[0-9]+$"
+              },
+              "scenario": {
+                "type": "string"
+              },
+              "input": {
+                "type": "string"
+              },
+              "expected": {
+                "type": "string"
+              },
+              "level": {
+                "type": "string"
+              },
+              "verify": {
+                "type": "string"
+              }
             }
           }
         },
@@ -97,31 +179,52 @@
           "items": {
             "type": "object",
             "additionalProperties": false,
-            "required": ["id", "category", "severity", "scenario", "whyConcern", "assertion", "level", "verify", "focusFile"],
+            "required": [
+              "id",
+              "category",
+              "severity",
+              "scenario",
+              "whyConcern",
+              "assertion",
+              "level",
+              "verify",
+              "focusFile"
+            ],
             "properties": {
-              "id": { "type": "string", "pattern": "^E[0-9]+$" },
-              "category": { "type": "string" },
-              "severity": { "type": "string" },
-              "scenario": { "type": "string" },
-              "whyConcern": { "type": "string" },
-              "assertion": { "type": "string" },
-              "level": { "type": "string" },
-              "verify": { "type": "string" },
-              "focusFile": { "type": ["string", "null"] }
+              "id": {
+                "type": "string",
+                "pattern": "^E[0-9]+$"
+              },
+              "category": {
+                "type": "string"
+              },
+              "severity": {
+                "type": "string"
+              },
+              "scenario": {
+                "type": "string"
+              },
+              "whyConcern": {
+                "type": "string"
+              },
+              "assertion": {
+                "type": "string"
+              },
+              "level": {
+                "type": "string"
+              },
+              "verify": {
+                "type": "string"
+              },
+              "focusFile": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
             }
           }
         }
-      }
-    },
-    "crDraft": {
-      "type": ["object", "null"],
-      "additionalProperties": false,
-      "required": ["affectedSystems", "rollbackNote", "testEvidenceNote", "reviewerNotes"],
-      "properties": {
-        "affectedSystems": { "type": "array", "items": { "type": "string" } },
-        "rollbackNote": { "type": ["string", "null"] },
-        "testEvidenceNote": { "type": ["string", "null"] },
-        "reviewerNotes": { "type": "array", "items": { "type": "string" } }
       }
     }
   }

@@ -25,6 +25,7 @@
     "mergeBaseSha": { "type": "string", "minLength": 7 },
     "baseAheadCount": { "type": "integer", "minimum": 0 },
     "workingTreeDirty": { "type": "boolean" },
+    "dirtyCount": { "type": "integer", "minimum": 0 },
     "empty": { "type": "boolean" },
     "summaryHint": { "type": ["string", "null"] },
     "totalAdded": { "type": "integer", "minimum": 0 },
