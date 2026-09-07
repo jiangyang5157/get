@@ -1,0 +1,124 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "change-set.schema.json",
+  "title": "change-set.json (Phase A output)",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion", "profile", "generator",
+    "headBranch", "headSha", "detachedHead",
+    "baseBranch", "baseRef", "baseSha", "mergeBaseSha",
+    "baseAheadCount", "workingTreeDirty",
+    "empty", "summaryHint", "totalAdded", "totalDeleted",
+    "files", "topDirs", "commits", "changedLines", "sensitiveTouch", "repoContext"
+  ],
+  "properties": {
+    "schemaVersion": { "const": "1" },
+    "profile": { "type": "string" },
+    "generator": { "const": "change-brief-collect" },
+    "headBranch": { "type": "string" },
+    "headSha": { "type": "string", "minLength": 7 },
+    "detachedHead": { "type": "boolean" },
+    "baseBranch": { "type": "string" },
+    "baseRef": { "type": "string" },
+    "baseSha": { "type": "string", "minLength": 7 },
+    "mergeBaseSha": { "type": "string", "minLength": 7 },
+    "baseAheadCount": { "type": "integer", "minimum": 0 },
+    "workingTreeDirty": { "type": "boolean" },
+    "empty": { "type": "boolean" },
+    "summaryHint": { "type": ["string", "null"] },
+    "totalAdded": { "type": "integer", "minimum": 0 },
+    "totalDeleted": { "type": "integer", "minimum": 0 },
+    "contentTruncated": { "type": "boolean" },
+    "files": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["path", "status", "added", "deleted"],
+        "properties": {
+          "path": { "type": "string" },
+          "status": { "type": "string", "enum": ["A", "M", "D", "R", "C", "T", "U", "X", "B"] },
+          "added": { "type": "integer", "minimum": 0 },
+          "deleted": { "type": "integer", "minimum": 0 },
+          "binary": { "type": "boolean" }
+        }
+      }
+    },
+    "topDirs": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["dir", "fileCount", "added", "deleted"],
+        "properties": {
+          "dir": { "type": "string" },
+          "fileCount": { "type": "integer", "minimum": 0 },
+          "added": { "type": "integer", "minimum": 0 },
+          "deleted": { "type": "integer", "minimum": 0 }
+        }
+      }
+    },
+    "commits": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["hash", "author", "dateIso", "subject"],
+        "properties": {
+          "hash": { "type": "string", "minLength": 7 },
+          "author": { "type": "string" },
+          "dateIso": { "type": "string" },
+          "subject": { "type": "string" }
+        }
+      }
+    },
+    "changedLines": {
+      "type": ["object", "null"],
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["added", "deleted", "truncated"],
+        "properties": {
+          "added": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["line", "text"],
+              "properties": {
+                "line": { "type": "integer", "minimum": 1 },
+                "text": { "type": "string" }
+              }
+            }
+          },
+          "deleted": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["line", "text"],
+              "properties": {
+                "line": { "type": "integer", "minimum": 1 },
+                "text": { "type": "string" }
+              }
+            }
+          },
+          "truncated": { "type": "boolean" }
+        }
+      }
+    },
+    "sensitiveTouch": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "array",
+        "items": { "type": "string" }
+      }
+    },
+    "contentOmitted": {
+      "type": "object",
+      "additionalProperties": { "type": "string" }
+    },
+    "repoContext": { "type": ["object", "null"] }
+  }
+}

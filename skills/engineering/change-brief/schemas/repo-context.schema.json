@@ -1,0 +1,16 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "repo-context.schema.json",
+  "title": "repo-context.json (optional author-provided app context)",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["testFramework", "testCommand", "authInTests", "affectedFlows", "relatedTestFiles", "constraints"],
+  "properties": {
+    "testFramework": { "type": "string" },
+    "testCommand": { "type": "string" },
+    "authInTests": { "type": "string" },
+    "affectedFlows": { "type": "array", "items": { "type": "string" } },
+    "relatedTestFiles": { "type": "array", "items": { "type": "string" } },
+    "constraints": { "type": ["string", "null"] }
+  }
+}

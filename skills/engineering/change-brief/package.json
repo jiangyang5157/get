@@ -1,0 +1,14 @@
+{
+  "name": "change-brief",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Local-only git change brief: branch diff -> change model -> curated HTML review artifact (three deterministic/LLM phases).",
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "selftest": "node bin/run.mjs selftest"
+  },
+  "license": "UNLICENSED"
+}
