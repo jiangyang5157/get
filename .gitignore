@@ -1,5 +1,6 @@
 # File System
 .DS_Store
+.copilot-trail
 
 # IDE
 .vscode/
