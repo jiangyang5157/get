@@ -1,6 +1,6 @@
 ---
 name: change-brief
-description: Produce a local, visual code-review brief (summary, risks, test suggestions) for a git feature branch against a base branch. Use when the user asks to review/preview what a branch changes before a PR/CR, or wants structured test ideas for a branch diff. Runs three phases (git collect → LLM model → HTML render); the CLI never calls an LLM.
+description: Produce a local, visual code-review brief (summary, risks, test suggestions) comparing branch/ref A against required branch B. Both refs resolve locally first, then from origin (--offline uses local only); a missing ref aborts. A defaults to the current HEAD and can be overridden with --head (any local branch, tag, sha, or origin/x; no checkout needed). B may also be a tag or local branch; a stale local B is flagged. Use when the user asks to review/preview what a branch changes before a PR/CR, compare two branches/refs, or wants structured test ideas for a branch diff. Runs three phases (git collect → LLM model → HTML render); the CLI never calls an LLM.
 disable-model-invocation: true
 ---
 
@@ -26,11 +26,19 @@ review must be checked out; the base branch, e.g. `main`, is a required arg).
 
 ## Workflow
 
+The skill compares **A** (source, defaults to current HEAD) vs **B** (target,
+required). Both resolve locally first, then from origin; a local branch B that
+differs from `origin/<B>` is flagged as possibly stale:
+
 ```bash
-# from the repo being reviewed (HEAD = feature branch)
-node <this-skill-dir>/bin/run.mjs collect main        # Phase A -> .change-brief/change-set.json
-node <this-skill-dir>/bin/run.mjs all main            # collect + prints Phase B instructions
+# A = current branch (default), B = main
+node <this-skill-dir>/bin/run.mjs collect main
+# A = specific branch/ref (no checkout needed), B = main
+node <this-skill-dir>/bin/run.mjs collect main --head feat/x
+node <this-skill-dir>/bin/run.mjs all    main --head feat/x
 ```
+A is resolved locally first, then from origin (aborts like a missing B when
+absent everywhere). Diff direction is B...A (what A adds over its fork with B).
 
 - **Phase A** is deterministic git collection (no LLM). Do it first.
 - **Phase B** is the LLM step — do it in this conversation:

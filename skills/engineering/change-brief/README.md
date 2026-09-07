@@ -20,26 +20,36 @@ HEAD + base ──▶ change-set.json ──▶ change-model.json ──▶ chan
 
 ## Quick start
 
-Inside a git repo, with the feature branch you want to review checked out:
+The skill compares **branch/ref A** (the change you care about) against
+**branch B** (the target, required). A defaults to the current checkout. Both A
+and B resolve **locally first**, then fall back to origin (see "Ref resolution"
+below):
 
 ```bash
-# 1. Phase A — deterministic collection (fetches origin/<base>)
+# A = current HEAD (default), B = main  — classic "review my branch"
 node <path>/change-brief/bin/run.mjs collect main
 
+# A = another branch/ref, B = main — no checkout needed, works on refs
+node <path>/change-brief/bin/run.mjs collect main --head feat/x
+node <path>/change-brief/bin/run.mjs all    main --head feat/x
+
+# 1. Phase A collects: change-set.json (fetches origin, resolves A then B)
 # 2. Phase B — LLM step, done in chat (NOT by this CLI):
 #    open .change-brief/change-set.json and run the two prompts in one
 #    conversation: prompts/summarize.md then prompts/tests.md.
 #    Save the single JSON output as .change-brief/change-model.json
 #    (you may hand-edit it between B and C and re-render).
-
 # 3. Phase C — deterministic render
 node <path>/change-brief/bin/run.mjs render .change-brief/change-model.json \
      --change-set .change-brief/change-set.json
-
-# one-command helper (collects, then prints Phase B instructions; renders if a
-# valid --model already exists)
-node <path>/change-brief/bin/run.mjs all main
 ```
+
+Diff direction is `B...A` — what A adds relative to its fork point with B.
+Both refs are resolved **locally first**, then from origin; a ref that exists
+nowhere aborts with `Branch "<ref>" does not exist on origin. Ending skill.`
+A or B may be a local branch, tag, sha, or `origin/x`. When a **local branch**
+B is used and differs from `origin/<B>`, a staleness note is printed (and shown
+in the HTML) so a stale base does not silently mislead the diff.
 
 All three files land in `.change-brief/` (add it to your repo's `.gitignore`):
 `change-set.json` (process data), `change-model.json`, `change-brief.html`.
@@ -47,20 +57,51 @@ All three files land in `.change-brief/` (add it to your repo's `.gitignore`):
 ## CLI surface
 
 ```
-node bin/run.mjs collect <base> [--out change-set.json] [--offline] [--context repo-context.json]
+node bin/run.mjs collect <base> [--head <A>] [--out change-set.json] [--offline] [--context repo-context.json]
 node bin/run.mjs render  <change-model.json> [--out change-brief.html] [--change-set change-set.json]
 node bin/run.mjs verify  <change-set.json> <change-model.json>
-node bin/run.mjs all     <base> [--model change-model.json] [--out change-brief.html] [--offline] [--context repo-context.json]
+node bin/run.mjs all     <base> [--head <A>] [--model change-model.json] [--out change-brief.html] [--offline] [--context repo-context.json]
 ```
 
 Exit codes: `0` success · `1` abort/validation failure · `2` usage error.
 
-- `--offline`: skip fetching; use the local `origin/<base>` remote-tracking ref.
+- `--head <A>`: source branch/ref to review (defaults to current HEAD).
+- `--offline`: skip fetching; use local remote-tracking refs only.
 - `--context repo-context.json`: author-supplied app context that lets the LLM
   write more concrete e2e suggestions (see schema `schemas/repo-context.schema.json`).
 - `--change-set`: pass the change-set so the render includes the deterministic
   per-directory file summary rows (status mix + line counts, files expandable) and
   cross-checks risk evidence line numbers.
+
+## Usage scenarios
+
+| # | What you want | Command |
+|---|---|---|
+| 1 | Review the **current branch** against `main` (most common) | `node bin/run.mjs all main` |
+| 2 | Review a **specific branch** against `main` | `node bin/run.mjs all main --head feat/x` |
+| 3 | Review a **remote branch** not fetched locally | `all main --head feat/x` — auto-fetches `origin/feat/x` |
+| 4 | Review a **local branch that is not pushed** yet | same command — local ref used directly |
+| 5 | Compare **any two refs** (branch/tag/sha) | `collect <B> --head <A>` |
+| 6 | **Release diff**: current code vs last release tag | `all main --head v2.0` (or swap A/B) |
+| 7 | **Offline** (no network allowed) | `collect main --offline` (needs refs already local) |
+| 8 | Ground **e2e test suggestions** in real app flows | add `--context repo-context.json` (author fills 5 questions) |
+| 9 | **Only Phase A** (then do Phase B in chat yourself) | `collect main --head feat/x` |
+| 10 | **Re-render** after hand-editing the model | `render change-model.json --change-set change-set.json` |
+
+Every scenario runs `collect` (Phase A) → Phase B is the LLM step in chat →
+`render` (Phase C); `all` automates collect + the Phase B instruction, and
+renders automatically when a valid `change-model.json` already exists.
+
+Ref resolution & staleness (both A and B, local-first → origin):
+
+- local branch / tag / sha / `origin/x` present → used as-is;
+- absent locally → fetched from origin (`fetch origin <ref>:…`);
+- absent everywhere → abort (`Branch "<ref>" does not exist on origin.`),
+  exit 1; in `--offline` mode the same missing ref aborts with a local-only note.
+- If B resolved to a local branch that differs from `origin/<B>` (behind / ahead
+  / diverged), you get a note like
+  `local branch "main" is 3 commits behind origin/main; pass "origin/main" for
+  the fresh one` — on stderr at collect time and as a chip in the HTML.
 
 ## Design notes & deliberate deviations from a naive reading
 
@@ -123,9 +164,9 @@ HTML shows the rounding test and the logging risk with correct
 
 ## Uncommitted working-tree changes
 
-`collect` compares **committed** `HEAD` vs `origin/<base>` only — uncommitted
-local edits are never part of the brief. If the working tree is dirty, the run
-still succeeds (exit 0) but:
+`collect` compares **committed** refs only — uncommitted local edits are never
+part of the brief. If A is the working HEAD and the tree is dirty, the run still
+succeeds (exit 0) but:
 
 - `change-set.json` records `workingTreeDirty: true` + `dirtyCount`,
 - the CLI prints a stderr note

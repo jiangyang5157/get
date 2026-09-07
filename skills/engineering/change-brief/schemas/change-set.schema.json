@@ -5,44 +5,134 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
-    "schemaVersion", "profile", "generator",
-    "headBranch", "headSha", "detachedHead",
-    "baseBranch", "baseRef", "baseSha", "mergeBaseSha",
-    "baseAheadCount", "workingTreeDirty",
-    "empty", "summaryHint", "totalAdded", "totalDeleted",
-    "files", "topDirs", "commits", "changedLines", "sensitiveTouch", "repoContext"
+    "schemaVersion",
+    "profile",
+    "generator",
+    "headBranch",
+    "headSha",
+    "detachedHead",
+    "baseBranch",
+    "baseRef",
+    "baseSha",
+    "mergeBaseSha",
+    "baseAheadCount",
+    "workingTreeDirty",
+    "empty",
+    "summaryHint",
+    "totalAdded",
+    "totalDeleted",
+    "files",
+    "topDirs",
+    "commits",
+    "changedLines",
+    "sensitiveTouch",
+    "repoContext"
   ],
   "properties": {
-    "schemaVersion": { "const": "1" },
-    "profile": { "type": "string" },
-    "generator": { "const": "change-brief-collect" },
-    "headBranch": { "type": "string" },
-    "headSha": { "type": "string", "minLength": 7 },
-    "detachedHead": { "type": "boolean" },
-    "baseBranch": { "type": "string" },
-    "baseRef": { "type": "string" },
-    "baseSha": { "type": "string", "minLength": 7 },
-    "mergeBaseSha": { "type": "string", "minLength": 7 },
-    "baseAheadCount": { "type": "integer", "minimum": 0 },
-    "workingTreeDirty": { "type": "boolean" },
-    "dirtyCount": { "type": "integer", "minimum": 0 },
-    "empty": { "type": "boolean" },
-    "summaryHint": { "type": ["string", "null"] },
-    "totalAdded": { "type": "integer", "minimum": 0 },
-    "totalDeleted": { "type": "integer", "minimum": 0 },
-    "contentTruncated": { "type": "boolean" },
+    "schemaVersion": {
+      "const": "1"
+    },
+    "profile": {
+      "type": "string"
+    },
+    "generator": {
+      "const": "change-brief-collect"
+    },
+    "headBranch": {
+      "type": "string"
+    },
+    "headSha": {
+      "type": "string",
+      "minLength": 7
+    },
+    "detachedHead": {
+      "type": "boolean"
+    },
+    "baseBranch": {
+      "type": "string"
+    },
+    "baseRef": {
+      "type": "string"
+    },
+    "baseSha": {
+      "type": "string",
+      "minLength": 7
+    },
+    "mergeBaseSha": {
+      "type": "string",
+      "minLength": 7
+    },
+    "baseAheadCount": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "workingTreeDirty": {
+      "type": "boolean"
+    },
+    "dirtyCount": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "empty": {
+      "type": "boolean"
+    },
+    "summaryHint": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "totalAdded": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "totalDeleted": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "contentTruncated": {
+      "type": "boolean"
+    },
     "files": {
       "type": "array",
       "items": {
         "type": "object",
         "additionalProperties": false,
-        "required": ["path", "status", "added", "deleted"],
+        "required": [
+          "path",
+          "status",
+          "added",
+          "deleted"
+        ],
         "properties": {
-          "path": { "type": "string" },
-          "status": { "type": "string", "enum": ["A", "M", "D", "R", "C", "T", "U", "X", "B"] },
-          "added": { "type": "integer", "minimum": 0 },
-          "deleted": { "type": "integer", "minimum": 0 },
-          "binary": { "type": "boolean" }
+          "path": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "A",
+              "M",
+              "D",
+              "R",
+              "C",
+              "T",
+              "U",
+              "X",
+              "B"
+            ]
+          },
+          "added": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "deleted": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "binary": {
+            "type": "boolean"
+          }
         }
       }
     },
@@ -51,12 +141,28 @@
       "items": {
         "type": "object",
         "additionalProperties": false,
-        "required": ["dir", "fileCount", "added", "deleted"],
+        "required": [
+          "dir",
+          "fileCount",
+          "added",
+          "deleted"
+        ],
         "properties": {
-          "dir": { "type": "string" },
-          "fileCount": { "type": "integer", "minimum": 0 },
-          "added": { "type": "integer", "minimum": 0 },
-          "deleted": { "type": "integer", "minimum": 0 }
+          "dir": {
+            "type": "string"
+          },
+          "fileCount": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "added": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "deleted": {
+            "type": "integer",
+            "minimum": 0
+          }
         }
       }
     },
@@ -65,31 +171,60 @@
       "items": {
         "type": "object",
         "additionalProperties": false,
-        "required": ["hash", "author", "dateIso", "subject"],
+        "required": [
+          "hash",
+          "author",
+          "dateIso",
+          "subject"
+        ],
         "properties": {
-          "hash": { "type": "string", "minLength": 7 },
-          "author": { "type": "string" },
-          "dateIso": { "type": "string" },
-          "subject": { "type": "string" }
+          "hash": {
+            "type": "string",
+            "minLength": 7
+          },
+          "author": {
+            "type": "string"
+          },
+          "dateIso": {
+            "type": "string"
+          },
+          "subject": {
+            "type": "string"
+          }
         }
       }
     },
     "changedLines": {
-      "type": ["object", "null"],
+      "type": [
+        "object",
+        "null"
+      ],
       "additionalProperties": {
         "type": "object",
         "additionalProperties": false,
-        "required": ["added", "deleted", "truncated"],
+        "required": [
+          "added",
+          "deleted",
+          "truncated"
+        ],
         "properties": {
           "added": {
             "type": "array",
             "items": {
               "type": "object",
               "additionalProperties": false,
-              "required": ["line", "text"],
+              "required": [
+                "line",
+                "text"
+              ],
               "properties": {
-                "line": { "type": "integer", "minimum": 1 },
-                "text": { "type": "string" }
+                "line": {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                "text": {
+                  "type": "string"
+                }
               }
             }
           },
@@ -98,14 +233,24 @@
             "items": {
               "type": "object",
               "additionalProperties": false,
-              "required": ["line", "text"],
+              "required": [
+                "line",
+                "text"
+              ],
               "properties": {
-                "line": { "type": "integer", "minimum": 1 },
-                "text": { "type": "string" }
+                "line": {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                "text": {
+                  "type": "string"
+                }
               }
             }
           },
-          "truncated": { "type": "boolean" }
+          "truncated": {
+            "type": "boolean"
+          }
         }
       }
     },
@@ -113,13 +258,31 @@
       "type": "object",
       "additionalProperties": {
         "type": "array",
-        "items": { "type": "string" }
+        "items": {
+          "type": "string"
+        }
       }
     },
     "contentOmitted": {
       "type": "object",
-      "additionalProperties": { "type": "string" }
+      "additionalProperties": {
+        "type": "string"
+      }
     },
-    "repoContext": { "type": ["object", "null"] }
+    "repoContext": {
+      "type": [
+        "object",
+        "null"
+      ]
+    },
+    "headSpec": {
+      "type": "string"
+    },
+    "baseLocalNote": {
+      "type": [
+        "string",
+        "null"
+      ]
+    }
   }
 }

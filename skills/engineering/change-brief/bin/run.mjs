@@ -14,10 +14,11 @@ import { validateJsonFile } from '../lib/validator.mjs';
 
 function usage() {
   return `Usage:
-  node bin/run.mjs collect <base> [--out change-set.json] [--offline] [--context repo-context.json]
+  node bin/run.mjs collect <base> [--head <A>] [--out change-set.json] [--offline] [--context repo-context.json]
+                       # A defaults to current HEAD; B resolves as origin/<base>
   node bin/run.mjs render  <change-model.json> [--out change-brief.html] [--change-set change-set.json]
   node bin/run.mjs verify  <change-set.json> <change-model.json>
-  node bin/run.mjs all     <base> [--model change-model.json] [--out change-brief.html] [--offline] [--context repo-context.json]
+  node bin/run.mjs all     <base> [--head <A>] [--model change-model.json] [--out change-brief.html] [--offline] [--context repo-context.json]
 Exit codes: 0 success · 1 abort/validation failure · 2 usage error`;
 }
 
@@ -26,7 +27,15 @@ function fail(msg, code = 1) {
   process.exit(code);
 }
 
-const VALUE_FLAGS = new Set(['out', 'change-set', 'context', 'model']);
+function warnNotes(changeSet) {
+  if (changeSet?.baseLocalNote) process.stderr.write(`Note: ${changeSet.baseLocalNote}\n`);
+  if (changeSet?.workingTreeDirty) {
+    const n = changeSet.dirtyCount ?? 0;
+    process.stderr.write(`Note: ${n} uncommitted change${n === 1 ? '' : 's'} ${n === 1 ? 'is' : 'are'} not included in this brief — commit or stash first.\n`);
+  }
+}
+
+const VALUE_FLAGS = new Set(['out', 'change-set', 'context', 'model', 'head']);
 
 function parseFlags(argv) {
   const pos = [];
@@ -85,6 +94,7 @@ async function cmdCollect(pos, flags, repoRoot) {
   try {
     changeSet = await collect({
       base,
+      from: flags.head || null,
       offline: flags.offline === true || flags.offline === 'true',
       repoContext: context,
       cwd: repoRoot,
@@ -98,10 +108,7 @@ async function cmdCollect(pos, flags, repoRoot) {
   fs.writeFileSync(outPath, JSON.stringify(changeSet, null, 2) + '\n');
   process.stdout.write(`Wrote ${rel(repoRoot, outPath)}\n`);
   if (changeSet.empty) process.stdout.write(`Note: ${changeSet.summaryHint}\n`);
-  if (changeSet.workingTreeDirty) {
-    const n = changeSet.dirtyCount ?? 0;
-    process.stderr.write(`Note: ${n} uncommitted change${n === 1 ? '' : 's'} ${n === 1 ? 'is' : 'are'} not included in this brief — commit or stash first.\n`);
-  }
+  warnNotes(changeSet);
   return 0;
 }
 
@@ -166,6 +173,7 @@ async function cmdAll(pos, flags, repoRoot) {
   try {
     changeSet = await collect({
       base,
+      from: flags.head || null,
       offline: flags.offline === true || flags.offline === 'true',
       repoContext: context,
       cwd: repoRoot,
@@ -179,10 +187,7 @@ async function cmdAll(pos, flags, repoRoot) {
   fs.writeFileSync(csPath, JSON.stringify(changeSet, null, 2) + '\n');
   process.stdout.write(`Wrote ${rel(repoRoot, csPath)}\n`);
   if (changeSet.empty) process.stdout.write(`Note: ${changeSet.summaryHint}\n`);
-  if (changeSet.workingTreeDirty) {
-    const n = changeSet.dirtyCount ?? 0;
-    process.stderr.write(`Note: ${n} uncommitted change${n === 1 ? '' : 's'} ${n === 1 ? 'is' : 'are'} not included in this brief — commit or stash first.\n`);
-  }
+  warnNotes(changeSet);
 
   // Phase B is the LLM step, external to this CLI.
   const modelPath = flags.model ? path.resolve(repoRoot, flags.model) : path.join(repoRoot, '.change-brief', 'change-model.json');

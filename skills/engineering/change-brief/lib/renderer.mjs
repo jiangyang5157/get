@@ -152,6 +152,9 @@ export function renderChangeBrief(model, changeSet = null) {
   if (changeSet?.baseAheadCount > 0) {
     warnBits.push(chip(`base ahead by ${changeSet.baseAheadCount}`, 'warn-chip', 'merge/rebase before review?'));
   }
+  if (changeSet?.baseLocalNote) {
+    warnBits.push(chip('local base may be stale', 'warn-chip', changeSet.baseLocalNote));
+  }
   if (changeSet?.workingTreeDirty) {
     warnBits.push(chip('dirty working tree', 'warn-chip', 'HEAD diff does not include uncommitted edits'));
   }
@@ -202,8 +205,7 @@ export function renderChangeBrief(model, changeSet = null) {
   }
 
   // ---- Summary --------------------------------------------------------------
-  const summarySection = `<section class="sec-summary">
-    <h1 class="doc-title">${escapeHtml(model.title || '')}</h1>
+  const summarySection = `<section>
     <h2>Summary</h2>
     <p class="summary-head">${escapeHtml(model.summary?.headline || '')}</p>
     <p class="summary-body">${escapeHtml(model.summary?.why || '')}</p>
@@ -260,11 +262,10 @@ export function renderChangeBrief(model, changeSet = null) {
 *{box-sizing:border-box}
 body{margin:0;font:14px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue","PingFang SC","Microsoft YaHei",sans-serif;color:var(--ink);background:#fff;padding:0 0 48px}
 .wrap{max-width:960px;margin:0 auto;padding:0 20px}
-header.top{padding:20px 0 4px;border-bottom:2px solid var(--line);margin-bottom:8px}
-.tool{font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--mut)}
-.meta{font-size:12px;color:var(--mut);display:flex;gap:12px;flex-wrap:wrap;align-items:center}
+header.top{padding:16px 0 2px}
+.meta{font-size:12px;color:var(--mut);display:flex;gap:12px;flex-wrap:wrap;align-items:center;margin-top:6px}
 .meta .chip{margin:0}
-.doc-title{font-size:20px;font-weight:700;margin:12px 0 2px;line-height:1.3}
+.doc-title{font-size:20px;font-weight:700;margin:0 0 0;line-height:1.3}
 h2{font-size:12px;text-transform:uppercase;letter-spacing:.07em;color:var(--mut);margin:14px 0 6px;padding-top:14px;border-top:1px solid var(--line)}
 h3.sub{font-size:13px;font-weight:600;margin:14px 0 4px}
 .summary-head{font-size:14px;font-weight:600;margin:0 0 6px}
@@ -326,19 +327,21 @@ details.dir .file-list{margin:2px 0 4px;padding-left:30px;border-left:2px solid 
 .empty{color:var(--add);font-weight:600}
 details{margin:4px 0}
 summary{cursor:pointer;font-size:12px;color:#2b4c7e;padding:2px 0}
+footer.foot{margin-top:36px;padding-top:10px;border-top:1px solid var(--line);font-size:11px;color:var(--mut);letter-spacing:.03em}
 @media print{-webkit-print-color-adjust:exact;print-color-adjust:exact}
 </style>
 </head>
 <body>
 <div class="wrap">
 <header class="top">
-  <div class="tool">Change Brief · schema v${escapeHtml(String(model.schemaVersion))}</div>
+  <h1 class="doc-title">${escapeHtml(model.title || '')}</h1>
   <div class="meta">${metaBits.join('<span class="dim">·</span>')}</div>
 </header>
 ${summarySection}
 ${changedSection}
 ${riskSection}
 ${testsSection}
+<footer class="foot">Change Brief · schema v${escapeHtml(String(model.schemaVersion))}</footer>
 </div>
 </body>
 </html>

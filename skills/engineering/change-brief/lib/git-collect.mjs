@@ -96,18 +96,26 @@ function isSensitiveFilename(p) {
 
 /**
  * Phase A collector.
- * @param {{base:string, offline?:boolean, repoContext?:object|null, cwd?:string}} opts
+ * @param {object} opts {
+ *   base: string           — target branch B (resolved as origin/<base>)
+ *   from?: string|null     — source branch/ref A; defaults to current HEAD
+ *   offline?, repoContext?, cwd?
+ * }
  * @returns {Promise<object>} change-set object (caller persists it)
  */
-export async function collect({ base, offline = false, repoContext = null, cwd = process.cwd() }) {
+export async function collect({ base, from = null, offline = false, repoContext = null, cwd = process.cwd() }) {
   if (!isGitRepo(cwd)) throw new CollectError('Not a git repository');
 
+  const headRef = from || 'HEAD'; // A — any git-resolvable ref (branch/tag/origin/x/sha)
+  const headIsWorkingHead = headRef === 'HEAD';
   const out = {
     schemaVersion: '1',
     profile: PROFILE,
     generator: 'change-brief-collect',
+    headSpec: headRef,
     headBranch: null, headSha: null, detachedHead: false,
     baseBranch: base, baseRef: null, baseSha: null, mergeBaseSha: null,
+    baseLocalNote: null,
     baseAheadCount: 0,
     workingTreeDirty: false,
     dirtyCount: 0,
@@ -118,26 +126,76 @@ export async function collect({ base, offline = false, repoContext = null, cwd =
     contentOmitted: {}, repoContext,
   };
 
-  // 1. head identity (detached-safe)
-  {
+  // 1. head identity — resolve A's sha + display name (no checkout needed when
+  //    A != HEAD; every git call below is ref-based). A is tried locally first;
+  //    if absent, origin/<A> is consulted after the base fetch below.
+  let headResolved = false;
+  if (headIsWorkingHead) {
     const sym = runGit(['symbolic-ref', '-q', '--short', 'HEAD'], { allowFail: true, cwd });
     out.detachedHead = sym.status !== 0 || sym.stdout.trim() === '';
     out.headBranch = out.detachedHead
       ? `HEAD (${runGit(['rev-parse', 'HEAD'], { cwd }).stdout.trim().slice(0, 12)})`
       : sym.stdout.trim();
     out.headSha = runGit(['rev-parse', 'HEAD'], { cwd }).stdout.trim();
+    headResolved = true;
+  } else {
+    const rev = runGit(['rev-parse', '--verify', '--quiet', `${headRef}^{commit}`], { allowFail: true, cwd });
+    if (rev.status === 0 && rev.stdout.trim()) {
+      out.headBranch = headRef;
+      out.headSha = rev.stdout.trim();
+      headResolved = true;
+    }
+    // not resolved → try origin/<A> after the shared fetch in step 3.
   }
 
-  // 2. dirty snapshot (before writing any output). Exclude the tool's own
-  //    output directory so a previous run does not count itself as dirty.
-  const porcelain = runGit(['status', '--porcelain', '--', '.', ':(exclude).change-brief'], { cwd }).stdout;
-  const dirtyEntries = porcelain.split('\n').filter((l) => l.trim() !== '');
-  out.workingTreeDirty = dirtyEntries.length > 0;
-  out.dirtyCount = dirtyEntries.length;
+  // 2. dirty snapshot — only meaningful when A is the checked-out HEAD
+  //    (uncommitted edits sit on top of A; when A is another ref they are
+  //    irrelevant to the A-vs-B comparison). Exclude tool's own output dir.
+  if (headIsWorkingHead) {
+    const porcelain = runGit(['status', '--porcelain', '--', '.', ':(exclude).change-brief'], { cwd }).stdout;
+    const dirtyEntries = porcelain.split('\n').filter((l) => l.trim() !== '');
+    out.workingTreeDirty = dirtyEntries.length > 0;
+    out.dirtyCount = dirtyEntries.length;
+  }
 
-  // 3.-4. refresh + remote existence (skipped when offline)
-  const baseRef = `origin/${base}`;
-  if (!offline) {
+  // 3.-4. resolve B: local-first, then origin (mirrors A). When a local branch
+  //    shadows origin/<B>, note the staleness so the brief is not misleading.
+  let baseRef; // ref string actually usable in git commands below
+  let baseLocalNote = null;
+  const localBase = runGit(['rev-parse', '--verify', '--quiet', `${base}^{commit}`], { allowFail: true, cwd });
+  if (localBase.status === 0 && localBase.stdout.trim()) {
+    baseRef = base; // resolvable locally: branch, tag, origin/x or sha
+    out.baseSha = localBase.stdout.trim();
+    // is it a *local branch* (not tag/sha)? if so it can be stale vs origin
+    const isLocalBranch = gitOk(['rev-parse', '--verify', '--quiet', `refs/heads/${base}`], cwd);
+    if (isLocalBranch && !offline) {
+      // refresh origin once so the staleness check is honest
+      const fetch = runGit(['fetch', 'origin', '--prune'], { allowFail: true, cwd });
+      if (fetch.status === 0) {
+        const o = runGit(['rev-parse', '--verify', '--quiet', `origin/${base}`], { allowFail: true, cwd });
+        if (o.status === 0 && o.stdout.trim() && o.stdout.trim() !== out.baseSha) {
+          const behind = Number(
+            runGit(['rev-list', '--count', `${out.baseSha}..${o.stdout.trim()}`], { allowFail: true, cwd }).stdout.trim() || 0,
+          );
+          const ahead = Number(
+            runGit(['rev-list', '--count', `${o.stdout.trim()}..${out.baseSha}`], { allowFail: true, cwd }).stdout.trim() || 0,
+          );
+          const rel =
+            behind > 0 && ahead === 0
+              ? `${behind} commit${behind === 1 ? '' : 's'} behind`
+              : ahead > 0 && behind === 0
+                ? `${ahead} commit${ahead === 1 ? '' : 's'} ahead of`
+                : `diverged from`;
+          baseLocalNote =
+            `local branch "${base}" is ${rel} origin/${base}; using the local ref — ` +
+            `pass "origin/${base}" for the remote one`;
+        }
+      }
+    }
+  } else if (offline) {
+    throw new CollectError(`Branch "${base}" is not available locally (offline). Ending skill.`);
+  } else {
+    // local miss → origin fallback
     const fetch = runGit(['fetch', 'origin', '--prune'], { allowFail: true, cwd });
     if (fetch.status !== 0) {
       throw new CollectError(fetch.stderr.trim() || `git fetch origin --prune failed (exit ${fetch.status})`);
@@ -150,20 +208,45 @@ export async function collect({ base, offline = false, repoContext = null, cwd =
     if (one.status !== 0) {
       throw new CollectError(`Branch "${base}" does not exist on origin. Ending skill.`);
     }
-  } else if (!gitOk(['rev-parse', '--verify', '--quiet', baseRef], cwd)) {
-    throw new CollectError(`Branch "${base}" is not available locally (offline). Ending skill.`);
+    baseRef = `origin/${base}`;
   }
   out.baseRef = baseRef;
+  out.baseLocalNote = baseLocalNote;
 
-  // 5. base sha + merge base + ahead count
+  // 4b. resolve A if it was not found locally — fall back to origin/<A>
+  //     (local-first, origin fallback). Same abort style as B when absent.
+  let headGitRef = headRef; // the ref actually usable in git commands
+  if (!headResolved) {
+    const remoteHead = `refs/remotes/origin/${headRef}`;
+    if (offline) {
+      if (!gitOk(['rev-parse', '--verify', '--quiet', remoteHead], cwd)) {
+        throw new CollectError(`Branch "${headRef}" is not available locally (offline). Ending skill.`);
+      }
+    } else {
+      const lsA = runGit(['ls-remote', '--heads', 'origin', headRef], { allowFail: true, cwd });
+      if (lsA.status !== 0 || lsA.stdout.trim() === '') {
+        throw new CollectError(`Branch "${headRef}" does not exist on origin. Ending skill.`);
+      }
+      const fetchA = runGit(['fetch', 'origin', `${headRef}:${remoteHead}`], { allowFail: true, cwd });
+      if (fetchA.status !== 0) {
+        throw new CollectError(`Branch "${headRef}" does not exist on origin. Ending skill.`);
+      }
+    }
+    out.headBranch = `origin/${headRef}`;
+    out.headSha = runGit(['rev-parse', remoteHead], { cwd }).stdout.trim();
+    headGitRef = remoteHead;
+    headResolved = true;
+  }
+
+  // 5. base sha + merge base + ahead count (A side = headGitRef)
   out.baseSha = runGit(['rev-parse', baseRef], { cwd }).stdout.trim();
-  out.mergeBaseSha = runGit(['merge-base', 'HEAD', baseRef], { cwd }).stdout.trim();
+  out.mergeBaseSha = runGit(['merge-base', headGitRef, baseRef], { cwd }).stdout.trim();
   out.baseAheadCount = Number(
-    runGit(['rev-list', '--count', `HEAD..${baseRef}`], { cwd }).stdout.trim() || 0,
+    runGit(['rev-list', '--count', `${headGitRef}..${baseRef}`], { cwd }).stdout.trim() || 0,
   );
 
   // 6./7. per-file stats (numstat) + statuses (name-status), rename-aware (-M).
-  const statDiff = ['-c', 'core.quotepath=false', 'diff', '-M', `${baseRef}...HEAD`];
+  const statDiff = ['-c', 'core.quotepath=false', 'diff', '-M', `${baseRef}...${headGitRef}`];
   const numstatLines = runGit([...statDiff, '--numstat'], { cwd }).stdout.split('\n').filter(Boolean);
   const nameStatusLines = runGit([...statDiff, '--name-status'], { cwd }).stdout.split('\n').filter(Boolean);
 
@@ -212,9 +295,9 @@ export async function collect({ base, offline = false, repoContext = null, cwd =
   out.totalAdded = files.reduce((s, f) => s + (f.binary ? 0 : f.added), 0);
   out.totalDeleted = files.reduce((s, f) => s + (f.binary ? 0 : f.deleted), 0);
 
-  // 8. commits between merge-base and HEAD (capped)
+  // 8. commits between merge-base and A (capped)
   const logRaw = runGit(
-    ['log', `${out.mergeBaseSha}..HEAD`, '--format=%H%x09%an%x09%aI%x09%s', '--max-count', String(COMMITS_CAP + 1)],
+    ['log', `${out.mergeBaseSha}..${headGitRef}`, '--format=%H%x09%an%x09%aI%x09%s', '--max-count', String(COMMITS_CAP + 1)],
     { cwd },
   ).stdout;
   const commitLines = logRaw.split('\n').filter(Boolean);
@@ -258,7 +341,7 @@ export async function collect({ base, offline = false, repoContext = null, cwd =
   out.topDirs = [...dirAgg.values()].sort((x, y) => (y.added + y.deleted) - (x.added + x.deleted));
 
   out.empty = out.totalAdded + out.totalDeleted === 0 && out.commits.length === 0;
-  if (out.empty) out.summaryHint = `No committed changes vs ${base}`;
+  if (out.empty) out.summaryHint = `No committed changes in ${out.headBranch} vs ${base}`;
 
   return out;
 }
