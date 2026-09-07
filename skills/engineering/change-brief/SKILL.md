@@ -19,10 +19,11 @@ never invent screens/accounts/IDs — app-specific nouns stay `{PLACEHOLDER}`.
 
 ## When to use
 
-The user wants to understand or review what the current git branch changes
-before opening/commenting a PR/CR, or wants a structured list of edge cases to
-test for that branch. Run it from inside the target git repo (the branch under
-review must be checked out; the base branch, e.g. `main`, is a required arg).
+The user wants to understand or review what one branch/ref changes against
+another before opening/commenting a PR/CR, or wants a structured list of edge
+cases to test for that change. The tool can run from **any** directory: the
+target repo defaults to the cwd (when it is a git repo) or is given explicitly
+with `--repo /path/to/repo` (required when the cwd is not a git repo).
 
 ## Workflow
 
@@ -31,14 +32,16 @@ required). Both resolve locally first, then from origin; a local branch B that
 differs from `origin/<B>` is flagged as possibly stale:
 
 ```bash
-# A = current branch (default), B = main
-node <this-skill-dir>/bin/run.mjs collect main
-# A = specific branch/ref (no checkout needed), B = main
-node <this-skill-dir>/bin/run.mjs collect main --head feat/x
-node <this-skill-dir>/bin/run.mjs all    main --head feat/x
+# A = current branch (default), B = main — run inside the repo
+node <this-skill-dir>/bin/run.mjs all main
+# A = specific branch/ref (no checkout needed) — from anywhere, repo explicit
+node <this-skill-dir>/bin/run.mjs all main --head feat/x --repo /path/to/repo
+# artifacts outside the repo + versioned run dir (history)
+node <this-skill-dir>/bin/run.mjs all main --head feat/x --repo /path/to/repo \
+     --out-dir /somewhere --run-id auto
 ```
-A is resolved locally first, then from origin (aborts like a missing B when
-absent everywhere). Diff direction is B...A (what A adds over its fork with B).
+Artifacts go to `<out-dir>[/<run-id>]/` (default `<repo>/.change-brief`).
+Diff direction is B...A (what A adds over its fork with B).
 
 - **Phase A** is deterministic git collection (no LLM). Do it first.
 - **Phase B** is the LLM step — do it in this conversation:

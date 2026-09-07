@@ -99,11 +99,14 @@ function isSensitiveFilename(p) {
  * @param {object} opts {
  *   base: string           — target branch B (resolved as origin/<base>)
  *   from?: string|null     — source branch/ref A; defaults to current HEAD
+ *   dirtyExclude?: string|null — pathspec to exclude from the dirty check
+ *                                (e.g. ".change-brief" or ".out/foo"); relative
+ *                                to the repo root. null/"" = no exclusion.
  *   offline?, repoContext?, cwd?
  * }
  * @returns {Promise<object>} change-set object (caller persists it)
  */
-export async function collect({ base, from = null, offline = false, repoContext = null, cwd = process.cwd() }) {
+export async function collect({ base, from = null, dirtyExclude = null, offline = false, repoContext = null, cwd = process.cwd() }) {
   if (!isGitRepo(cwd)) throw new CollectError('Not a git repository');
 
   const headRef = from || 'HEAD'; // A — any git-resolvable ref (branch/tag/origin/x/sha)
@@ -150,9 +153,12 @@ export async function collect({ base, from = null, offline = false, repoContext 
 
   // 2. dirty snapshot — only meaningful when A is the checked-out HEAD
   //    (uncommitted edits sit on top of A; when A is another ref they are
-  //    irrelevant to the A-vs-B comparison). Exclude tool's own output dir.
+  //    irrelevant to the A-vs-B comparison). Exclude the tool's own output
+  //    directory (relative pathspec), so a previous run is not counted dirty.
   if (headIsWorkingHead) {
-    const porcelain = runGit(['status', '--porcelain', '--', '.', ':(exclude).change-brief'], { cwd }).stdout;
+    const args = ['status', '--porcelain'];
+    if (dirtyExclude) args.push('--', '.', `:(exclude)${dirtyExclude}`);
+    const porcelain = runGit(args, { cwd }).stdout;
     const dirtyEntries = porcelain.split('\n').filter((l) => l.trim() !== '');
     out.workingTreeDirty = dirtyEntries.length > 0;
     out.dirtyCount = dirtyEntries.length;
@@ -321,8 +327,8 @@ export async function collect({ base, from = null, offline = false, repoContext 
       out.contentOmitted[f.path] = 'sensitive-filename';
       const rec = changedLines[f.path];
       if (rec) {
-        for (const l of rec.added) l.text = '';
-        for (const l of rec.deleted) l.text = '';
+        for (const l of rec.text.added) l.text = '';
+        for (const l of rec.text.deleted) l.text = '';
       }
     }
   }
@@ -346,19 +352,54 @@ export async function collect({ base, from = null, offline = false, repoContext 
   return out;
 }
 
-/** Parse `git diff -U0` text into {path: {added, deleted, truncated}}. */
+/**
+ * Parse `git diff -U0` text into per-path change snapshot:
+ *   { ranges: {added:[{start,count}], deleted:[...]},   — COMPLETE anchors, no cap
+ *     text:   {added:[{line,text}], deleted:[...]},     — capped visible lines (Phase B)
+ *     truncated: bool }                                  — true when text was capped
+ * Ranges are merged runs of changed line numbers (tiny even for huge diffs),
+ * text is capped so change-set.json stays small; anchors stay complete so
+ * evidence can cite any changed line, not just the first N.
+ */
 function buildChangedLines(diffText) {
   const result = {};
   let globalText = 0;
   let curPath = null;
   let hunk = null;
 
-  const recFor = (p) => result[p] ?? (result[p] = { added: [], deleted: [], truncated: false });
+  const recFor = (p) =>
+    result[p] ??
+    (result[p] = {
+      ranges: { added: [], deleted: [] },
+      text: { added: [], deleted: [] },
+      truncated: false,
+    });
+
+  // open runs being aggregated per file (for range compression)
+  const openRun = { added: null, deleted: null }; // {path, start, last} per kind
+
+  const closeRun = (kind) => {
+    const r = openRun[kind];
+    if (r && r.count > 0) result[r.path].ranges[kind].push({ start: r.start, count: r.count });
+    openRun[kind] = null;
+  };
+  const extendRun = (kind, path, line) => {
+    const r = openRun[kind];
+    if (r && r.path === path && line === r.last + 1) {
+      r.count += 1;
+      r.last = line;
+      return;
+    }
+    closeRun(kind);
+    openRun[kind] = { path, start: line, last: line, count: 1 };
+  };
 
   for (const line of diffText.split('\n')) {
     if (line.startsWith('diff --git ')) {
       curPath = null;
       hunk = null;
+      closeRun('added');
+      closeRun('deleted');
       continue;
     }
     // "--- a/x" / "+++ b/x" give exact (possibly space-containing) paths
@@ -380,22 +421,35 @@ function buildChangedLines(diffText) {
     }
     if (hunk === null) continue;
     const rec = recFor(curPath);
-    const overCap = (kind) =>
-      (kind === 'added' && rec.added.length >= PER_FILE_ADDED_CAP) ||
-      (kind === 'deleted' && rec.deleted.length >= PER_FILE_DELETED_CAP) ||
-      globalText >= GLOBAL_TEXT_CAP;
     if (line.startsWith('+') && !line.startsWith('+++')) {
-      if (!overCap('added')) { rec.added.push({ line: hunk.addedLine, text: line.slice(1) }); globalText++; }
-      else rec.truncated = true;
+      // always extend the complete anchor range…
+      extendRun('added', curPath, hunk.addedLine);
+      // …and only keep text within budget
+      const textFull = rec.text.added.length >= PER_FILE_ADDED_CAP || globalText >= GLOBAL_TEXT_CAP;
+      if (textFull) rec.truncated = true;
+      else {
+        rec.text.added.push({ line: hunk.addedLine, text: line.slice(1) });
+        globalText++;
+      }
       hunk.addedLine++;
     } else if (line.startsWith('-') && !line.startsWith('---')) {
-      if (!overCap('deleted')) { rec.deleted.push({ line: hunk.deletedLine, text: line.slice(1) }); globalText++; }
-      else rec.truncated = true;
+      extendRun('deleted', curPath, hunk.deletedLine);
+      const textFull = rec.text.deleted.length >= PER_FILE_DELETED_CAP || globalText >= GLOBAL_TEXT_CAP;
+      if (textFull) rec.truncated = true;
+      else {
+        rec.text.deleted.push({ line: hunk.deletedLine, text: line.slice(1) });
+        globalText++;
+      }
       hunk.deletedLine++;
     }
   }
+  closeRun('added');
+  closeRun('deleted');
   for (const k of Object.keys(result)) {
-    if (result[k].added.length === 0 && result[k].deleted.length === 0) delete result[k];
+    const r = result[k];
+    const emptyText = r.text.added.length === 0 && r.text.deleted.length === 0;
+    const emptyRange = r.ranges.added.length === 0 && r.ranges.deleted.length === 0;
+    if (emptyText && emptyRange) delete result[k];
   }
   return result;
 }

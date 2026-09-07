@@ -203,47 +203,109 @@
         "type": "object",
         "additionalProperties": false,
         "required": [
-          "added",
-          "deleted",
+          "ranges",
+          "text",
           "truncated"
         ],
         "properties": {
-          "added": {
-            "type": "array",
-            "items": {
-              "type": "object",
-              "additionalProperties": false,
-              "required": [
-                "line",
-                "text"
-              ],
-              "properties": {
-                "line": {
-                  "type": "integer",
-                  "minimum": 1
-                },
-                "text": {
-                  "type": "string"
+          "ranges": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "added",
+              "deleted"
+            ],
+            "properties": {
+              "added": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "start",
+                    "count"
+                  ],
+                  "properties": {
+                    "start": {
+                      "type": "integer",
+                      "minimum": 1
+                    },
+                    "count": {
+                      "type": "integer",
+                      "minimum": 1
+                    }
+                  }
+                }
+              },
+              "deleted": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "start",
+                    "count"
+                  ],
+                  "properties": {
+                    "start": {
+                      "type": "integer",
+                      "minimum": 1
+                    },
+                    "count": {
+                      "type": "integer",
+                      "minimum": 1
+                    }
+                  }
                 }
               }
             }
           },
-          "deleted": {
-            "type": "array",
-            "items": {
-              "type": "object",
-              "additionalProperties": false,
-              "required": [
-                "line",
-                "text"
-              ],
-              "properties": {
-                "line": {
-                  "type": "integer",
-                  "minimum": 1
-                },
-                "text": {
-                  "type": "string"
+          "text": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "added",
+              "deleted"
+            ],
+            "properties": {
+              "added": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "line",
+                    "text"
+                  ],
+                  "properties": {
+                    "line": {
+                      "type": "integer",
+                      "minimum": 1
+                    },
+                    "text": {
+                      "type": "string"
+                    }
+                  }
+                }
+              },
+              "deleted": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "line",
+                    "text"
+                  ],
+                  "properties": {
+                    "line": {
+                      "type": "integer",
+                      "minimum": 1
+                    },
+                    "text": {
+                      "type": "string"
+                    }
+                  }
                 }
               }
             }

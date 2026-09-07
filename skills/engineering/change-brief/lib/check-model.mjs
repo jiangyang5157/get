@@ -36,9 +36,14 @@ export async function checkModel(model, changeSet = null) {
   return { ok: violations.length === 0, violations };
 }
 
-/** Evidence must point at lines that exist as changed lines in the change set. */
+/** Evidence must point at lines that exist as changed lines in the change set.
+ *  A line is "changed" when it falls inside a range in changedLines[path].ranges
+ *  (ranges are COMPLETE anchors — never truncated — so evidence may cite any
+ *  changed line, even beyond the capped visible text). */
 export function checkEvidence(model, changeSet) {
   const out = [];
+  const inRanges = (ranges, line) =>
+    Array.isArray(ranges) && ranges.some((r) => line >= r.start && line <= r.start + r.count - 1);
   for (const [ri, r] of (model.risks || []).entries()) {
     for (const [ei, ev] of (r.evidence || []).entries()) {
       const file = (changeSet.files || []).find((f) => f.path === ev.path);
@@ -47,8 +52,10 @@ export function checkEvidence(model, changeSet) {
         continue;
       }
       const rec = (changeSet.changedLines || {})[ev.path];
-      const lines = rec ? (ev.deleted ? rec.deleted : rec.added) : [];
-      if (!lines.some((l) => l.line === ev.line)) {
+      const ok = rec
+        ? inRanges(ev.deleted ? rec.ranges?.deleted : rec.ranges?.added, ev.line)
+        : false;
+      if (!ok) {
         out.push({
           path: `risks[${ri}].evidence[${ei}].line`,
           msg: `${ev.path}:${ev.line}${ev.deleted ? ' (deleted)' : ''} is not a changed line in the change set`,

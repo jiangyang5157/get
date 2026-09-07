@@ -23,26 +23,47 @@ HEAD + base ──▶ change-set.json ──▶ change-model.json ──▶ chan
 The skill compares **branch/ref A** (the change you care about) against
 **branch B** (the target, required). A defaults to the current checkout. Both A
 and B resolve **locally first**, then fall back to origin (see "Ref resolution"
-below):
+below).
+
+Run it **from anywhere** — the target repo is chosen by `--repo <path>`
+(default: your current directory, when it is a git repo):
 
 ```bash
-# A = current HEAD (default), B = main  — classic "review my branch"
-node <path>/change-brief/bin/run.mjs collect main
+# from inside the repo — classic "review my branch" (A=HEAD, B=main)
+node <path>/change-brief/bin/run.mjs all main
 
-# A = another branch/ref, B = main — no checkout needed, works on refs
-node <path>/change-brief/bin/run.mjs collect main --head feat/x
-node <path>/change-brief/bin/run.mjs all    main --head feat/x
+# from anywhere — target repo is explicit; review feat/x (A) vs main (B)
+node <path>/change-brief/bin/run.mjs all main --head feat/x --repo /path/to/repo
 
-# 1. Phase A collects: change-set.json (fetches origin, resolves A then B)
-# 2. Phase B — LLM step, done in chat (NOT by this CLI):
-#    open .change-brief/change-set.json and run the two prompts in one
-#    conversation: prompts/summarize.md then prompts/tests.md.
-#    Save the single JSON output as .change-brief/change-model.json
-#    (you may hand-edit it between B and C and re-render).
-# 3. Phase C — deterministic render
-node <path>/change-brief/bin/run.mjs render .change-brief/change-model.json \
-     --change-set .change-brief/change-set.json
+# keep artifacts outside the repo (read-only checkout / avoid pollution)
+node <path>/change-brief/bin/run.mjs all main --head feat/x --repo /path/to/repo \
+     --out-dir /somewhere/else --run-id auto     # run-id auto = <A8>_<B8> dir
+
+# 1. Phase A collects change-set.json  (fetches origin, resolves A then B)
+# 2. Phase B — LLM step, done in chat (NOT by this CLI): read change-set.json and
+#    run prompts/summarize.md then prompts/tests.md (same conversation); save the
+#    single JSON output as change-model.json (hand-editable, then re-render).
+# 3. Phase C — deterministic render (defaults HTML next to the model file)
+node <path>/change-brief/bin/run.mjs render <...>/change-model.json \
+     --change-set <...>/change-set.json
 ```
+
+`all` prints the exact `render` command to run after Phase B, with absolute
+paths, so you can copy-paste it.
+
+## Path model (three independent knobs)
+
+| knob | meaning | default |
+|---|---|---|
+| `--repo <path>` | target git repo for all git commands | current dir — **required** when the cwd is not a git repo |
+| `--out-dir <path>` | root where artifacts are written | `<repo>/.change-brief` |
+| `--run-id <name\|auto>` | run history subfolder `<out-dir>/<run-id>/`; `auto` = `<A-sha8>_<B-sha8>` | flat (no subfolder) |
+
+Artifacts per run: `change-set.json` (Phase A), `change-model.json` (Phase B),
+`change-brief.html` (Phase C). `render` writes HTML **next to the model file**
+by default (predictable from anywhere); `--out <file>` overrides. The dirty-tree
+check excludes the output area automatically, whether it is inside the repo
+(`.change-brief`, or a custom `--out-dir`) or outside it.
 
 Diff direction is `B...A` — what A adds relative to its fork point with B.
 Both refs are resolved **locally first**, then from origin; a ref that exists
@@ -51,16 +72,19 @@ A or B may be a local branch, tag, sha, or `origin/x`. When a **local branch**
 B is used and differs from `origin/<B>`, a staleness note is printed (and shown
 in the HTML) so a stale base does not silently mislead the diff.
 
-All three files land in `.change-brief/` (add it to your repo's `.gitignore`):
-`change-set.json` (process data), `change-model.json`, `change-brief.html`.
+If artifacts live inside the repo (`<repo>/.change-brief`), add it to the
+repo's `.gitignore`.
 
 ## CLI surface
 
 ```
-node bin/run.mjs collect <base> [--head <A>] [--out change-set.json] [--offline] [--context repo-context.json]
-node bin/run.mjs render  <change-model.json> [--out change-brief.html] [--change-set change-set.json]
+node bin/run.mjs collect <base> [--head <A>] [--repo <path>] [--out-dir <path>] [--run-id <name|auto>] [--offline] [--context repo-context.json]
+node bin/run.mjs render  <change-model.json> [--out <file>] [--change-set <file>] [--out-dir <path>]
 node bin/run.mjs verify  <change-set.json> <change-model.json>
-node bin/run.mjs all     <base> [--head <A>] [--model change-model.json] [--out change-brief.html] [--offline] [--context repo-context.json]
+node bin/run.mjs all     <base> [--head <A>] [--repo <path>] [--out-dir <path>] [--run-id <name|auto>] [--model <file>] [--offline] [--context repo-context.json]
+node bin/run.mjs review  <base> …   (alias for `all`)
+node bin/run.mjs verify  [--repo <path>] [--out-dir <path>] [--run-id <name|auto>]
+                        # or: verify <change-set.json> <change-model.json>
 ```
 
 Exit codes: `0` success · `1` abort/validation failure · `2` usage error.
@@ -87,10 +111,15 @@ Exit codes: `0` success · `1` abort/validation failure · `2` usage error.
 | 8 | Ground **e2e test suggestions** in real app flows | add `--context repo-context.json` (author fills 5 questions) |
 | 9 | **Only Phase A** (then do Phase B in chat yourself) | `collect main --head feat/x` |
 | 10 | **Re-render** after hand-editing the model | `render change-model.json --change-set change-set.json` |
+| 11 | **Quick alias**: same as `all` but intent-named | `review main --head feat/x` |
+| 12 | **Verify a run** without typing paths | `verify --repo <path> --run-id <name>` (or `--run-id auto` picks newest `A8_B8` dir) |
 
 Every scenario runs `collect` (Phase A) → Phase B is the LLM step in chat →
 `render` (Phase C); `all` automates collect + the Phase B instruction, and
 renders automatically when a valid `change-model.json` already exists.
+The commands above assume you are **inside** the target repo (so `--repo` is
+omitted). From any other directory, append `--repo /path/to/repo`, and add
+`--out-dir <path>` / `--run-id auto` to relocate or version the artifacts.
 
 Ref resolution & staleness (both A and B, local-first → origin):
 
@@ -107,10 +136,16 @@ Ref resolution & staleness (both A and B, local-first → origin):
 
 - **Phases are separated by JSON contracts so a human or agent can edit
   `change-model.json` between B and C and re-render.** The CLI never calls an LLM.
-- **`changedLines` is the single source for both content and evidence anchors.**
-  Text is capped (per-file/per-run) and marked `truncated`; evidence validation
-  only accepts lines that actually exist there, so the model cannot invent
-  `file:line`.
+- **`changedLines` splits anchors from content** (release-scale friendly):
+  - `.ranges.added/.deleted` are **complete** line-number anchors
+    (`{start, count}`), never truncated — even a 10k-line rewrite keeps every
+    changed line citeable; range lists stay tiny (merged runs), so the JSON does
+    not balloon;
+  - `.text.added/.deleted` hold the actual line text the LLM may read, capped
+    per file and per run (`truncated: true` when capped).
+  Evidence validation checks `.ranges` (complete), so reviewers can cite any
+  changed line, while the prompts forbid describing content the model could not
+  read. The model cannot invent `file:line` outside the ranges.
 - **Renames**: git's own rename detection (`-M`) drives both stats and status.
   Renamed files appear once with the final path and status `R`.
 - **Evidence gate**: `render --change-set` and `verify` reject models whose risk
