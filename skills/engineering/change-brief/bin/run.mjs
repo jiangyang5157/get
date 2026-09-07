@@ -21,6 +21,13 @@ import { validateJsonFile } from '../lib/validator.mjs';
 
 const DEFAULT_OUT = '.change-brief';
 
+
+/** auto run name: <A8>_<B8>_<ts> — timestamp suffix keeps re-runs of the same
+ *  A/B pair from overwriting each other (run history stays intact). */
+function autoRunId(changeSet) {
+  return `${changeSet.headSha.slice(0, 8)}_${changeSet.baseSha.slice(0, 8)}_${Date.now().toString(36)}`;
+}
+
 function usage() {
   return `Usage:
   node bin/run.mjs collect <base> [--head <A>] [--repo <path>] [--out-dir <path>] [--run-id <name|auto>]
@@ -158,7 +165,7 @@ async function cmdCollect(pos, flags, repo) {
     if (e instanceof CollectError) fail(e.message);
     throw e;
   }
-  const runId = flags['run-id'] === 'auto' ? `${changeSet.headSha.slice(0, 8)}_${changeSet.baseSha.slice(0, 8)}` : flags['run-id'];
+  const runId = flags['run-id'] === 'auto' ? autoRunId(changeSet) : flags['run-id'];
   const runDir = resolveRunDir(outDir, runId);
   const outPath = path.join(runDir, 'change-set.json');
   fs.mkdirSync(runDir, { recursive: true });
@@ -213,7 +220,7 @@ async function cmdVerify(pos, flags) {
       if (flags['run-id'] === 'auto') {
         // pick the newest A8_B8 run dir under outDir
         const dirs = fs.readdirSync(outDir, { withFileTypes: true })
-          .filter((d) => d.isDirectory() && /^[0-9a-f]{8}_[0-9a-f]{8}$/.test(d.name))
+          .filter((d) => d.isDirectory() && /^[0-9a-f]{8}_[0-9a-f]{8}(_[0-9a-z]+)?$/.test(d.name))
           .map((d) => path.join(outDir, d.name))
           .sort((a, b) => fs.statSync(b).mtimeMs - fs.statSync(a).mtimeMs);
         if (!dirs.length) fail(`verify: no auto run dir found under ${outDir}`, 1);
@@ -260,7 +267,7 @@ async function cmdAll(pos, flags, repo) {
     if (e instanceof CollectError) fail(e.message);
     throw e;
   }
-  const runId = flags['run-id'] === 'auto' ? `${changeSet.headSha.slice(0, 8)}_${changeSet.baseSha.slice(0, 8)}` : flags['run-id'];
+  const runId = flags['run-id'] === 'auto' ? autoRunId(changeSet) : flags['run-id'];
   const runDir = resolveRunDir(outDir, runId);
   const csPath = path.join(runDir, 'change-set.json');
   fs.mkdirSync(runDir, { recursive: true });

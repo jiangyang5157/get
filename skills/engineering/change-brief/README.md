@@ -37,7 +37,7 @@ node <path>/change-brief/bin/run.mjs all main --head feat/x --repo /path/to/repo
 
 # keep artifacts outside the repo (read-only checkout / avoid pollution)
 node <path>/change-brief/bin/run.mjs all main --head feat/x --repo /path/to/repo \
-     --out-dir /somewhere/else --run-id auto     # run-id auto = <A8>_<B8> dir
+     --out-dir /somewhere/else --run-id auto     # run-id auto = <A8>_<B8>_<ts> dir (unique per run)
 
 # 1. Phase A collects change-set.json  (fetches origin, resolves A then B)
 # 2. Phase B — LLM step, done in chat (NOT by this CLI): read change-set.json and
@@ -57,7 +57,7 @@ paths, so you can copy-paste it.
 |---|---|---|
 | `--repo <path>` | target git repo for all git commands | current dir — **required** when the cwd is not a git repo |
 | `--out-dir <path>` | root where artifacts are written | `<repo>/.change-brief` |
-| `--run-id <name\|auto>` | run history subfolder `<out-dir>/<run-id>/`; `auto` = `<A-sha8>_<B-sha8>` | flat (no subfolder) |
+| `--run-id <name\|auto>` | run history subfolder `<out-dir>/<run-id>/`; `auto` = `<A-sha8>_<B-sha8>_<ts>` (timestamp keeps re-runs distinct) | flat (no subfolder) |
 
 Artifacts per run: `change-set.json` (Phase A), `change-model.json` (Phase B),
 `change-brief.html` (Phase C). `render` writes HTML **next to the model file**
@@ -112,7 +112,7 @@ Exit codes: `0` success · `1` abort/validation failure · `2` usage error.
 | 9 | **Only Phase A** (then do Phase B in chat yourself) | `collect main --head feat/x` |
 | 10 | **Re-render** after hand-editing the model | `render change-model.json --change-set change-set.json` |
 | 11 | **Quick alias**: same as `all` but intent-named | `review main --head feat/x` |
-| 12 | **Verify a run** without typing paths | `verify --repo <path> --run-id <name>` (or `--run-id auto` picks newest `A8_B8` dir) |
+| 12 | **Verify a run** without typing paths | `verify --repo <path> --run-id <name>` (or `--run-id auto` picks the newest auto-named run dir) |
 
 Every scenario runs `collect` (Phase A) → Phase B is the LLM step in chat →
 `render` (Phase C); `all` automates collect + the Phase B instruction, and
