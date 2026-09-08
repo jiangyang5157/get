@@ -211,11 +211,15 @@ function cmdVerify(pos, flags) {
     let runDir = outDir;
     if (flags['run-id']) {
       if (flags['run-id'] === 'auto') {
-        // pick the newest A8_B8 run dir under outDir
+        // pick the newest A8_B8 run dir under outDir; tie-break by name (desc)
+        // so identical mtimes still resolve deterministically
         const dirs = fs.readdirSync(outDir, { withFileTypes: true })
           .filter((d) => d.isDirectory() && /^[0-9a-f]{8}_[0-9a-f]{8}(_[0-9a-z]+)?$/.test(d.name))
           .map((d) => path.join(outDir, d.name))
-          .sort((a, b) => fs.statSync(b).mtimeMs - fs.statSync(a).mtimeMs);
+          .sort((a, b) => {
+            const dm = fs.statSync(b).mtimeMs - fs.statSync(a).mtimeMs;
+            return dm !== 0 ? dm : b.localeCompare(a);
+          });
         if (!dirs.length) fail(`verify: no auto run dir found under ${outDir}`, 1);
         runDir = dirs[0];
       } else {
