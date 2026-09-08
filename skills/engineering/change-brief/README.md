@@ -40,9 +40,6 @@ ideas is up to you:
 In a bare terminal, `review` stops after Phase A — the model step needs an
 LLM. `collect`, `verify`, `render` are available separately for scripts.
 
-Refs resolve locally first, then from origin; a missing ref aborts with a clear
-message.
-
 ---
 
 More scenarios, implementation details: see `docs/DESIGN.md`.
