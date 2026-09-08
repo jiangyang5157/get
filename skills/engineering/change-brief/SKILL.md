@@ -23,10 +23,14 @@ Compare **A** (source, defaults to current HEAD) vs **B** (target, required).
 Both resolve locally first, then from origin. Diff direction is `B...A`.
 
 ```bash
+# B (the target, after `review`) is required and can be any ref — main is just
+# the common example; use a branch, tag, or sha there as needed.
 # A = current branch (default), B = main
 node <this-skill-dir>/bin/run.mjs review main
-# A = specific branch/ref from anywhere (no checkout needed)
+# A = a specific ref, B = main, repo explicit — no checkout needed
 node <this-skill-dir>/bin/run.mjs review main --head feat/x --repo /path/to/repo
+# e.g. B = a tag, A = a branch
+node <this-skill-dir>/bin/run.mjs review v2.0 --head feat/x
 ```
 `review` runs Phase A, prints the Phase B instructions, and renders if a model
 already exists. Artifacts: `change-set.json` · `change-model.json` ·
