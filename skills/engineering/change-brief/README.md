@@ -37,9 +37,8 @@ ideas is up to you:
 | "Review the current branch of `/path/to/repo` vs `main`" | `review main --repo /path/to/repo` |
 | "Compare `feat/x` vs `main` in `/path/to/repo`" | `review main --head feat/x --repo /path/to/repo` |
 
-In a bare terminal (no agent), `review` stops after Phase A and prints the
-prompts + render command — the LLM step is yours. `verify` (model ↔ change-set
-check) and `collect` are available separately for scripts.
+In a bare terminal, `review` stops after Phase A — the model step needs an
+LLM. `collect`, `verify`, `render` are available separately for scripts.
 
 Refs resolve locally first, then from origin; a missing ref aborts with a clear
 message.
