@@ -3,7 +3,7 @@
 //   collect <base>  -> change-set.json        (Phase A, deterministic)
 //   render  <model> -> change-brief.html      (Phase C, deterministic; --change-set for chart)
 //   verify  <change-set> <model>              (validate model schema+vocab+evidence)
-//   all     <base>  -> collect then instruct Phase B; render if --model valid
+//   review  <base>  -> collect then instruct Phase B; render if --model valid
 //
 // Path model (three independent knobs):
 //   --repo <path>     target git repo for git commands (default: current cwd
@@ -33,9 +33,8 @@ function usage() {
   node bin/run.mjs collect <base> [--head <A>] [--repo <path>] [--out-dir <path>] [--run-id <name|auto>]
                         [--offline] [--context repo-context.json]
   node bin/run.mjs render  <change-model.json> [--out <file>] [--change-set <file>] [--out-dir <path>]
-  node bin/run.mjs all     <base> [--head <A>] [--repo <path>] [--out-dir <path>] [--run-id <name|auto>]
+  node bin/run.mjs review  <base> [--head <A>] [--repo <path>] [--out-dir <path>] [--run-id <name|auto>]
                         [--model <file>] [--offline] [--context repo-context.json]
-  node bin/run.mjs review  <base> …   (alias for 'all')
   node bin/run.mjs verify  [--repo <path>] [--out-dir <path>] [--run-id <name|auto>]
                         # or: verify <change-set.json> <change-model.json>
 
@@ -248,9 +247,9 @@ async function cmdVerify(pos, flags) {
   return 0;
 }
 
-async function cmdAll(pos, flags, repo) {
+async function cmdReview(pos, flags, repo) {
   const [base] = pos;
-  if (!base) fail('usage: all <base> required', 2);
+  if (!base) fail('usage: review <base> required', 2);
   const outDir = resolveOutDir(repo, flags);
   // Phase A
   let changeSet;
@@ -320,10 +319,9 @@ async function main() {
       const repo = resolveRepo(flags); // git ops need a real repo
       return cmdCollect(pos, flags, repo);
     }
-    case 'all':
-    case 'review': {           // 'review' is an alias for 'all'
+    case 'review': {
       const repo = resolveRepo(flags);
-      return cmdAll(pos, flags, repo);
+      return cmdReview(pos, flags, repo);
     }
     case 'render': return cmdRender(pos, flags);
     case 'verify': return cmdVerify(pos, flags);

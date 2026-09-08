@@ -42,8 +42,8 @@ node <this-skill-dir>/bin/run.mjs review main --head feat/x --repo /path/to/repo
 node <this-skill-dir>/bin/run.mjs review main --head feat/x --repo /path/to/repo \
      --out-dir /somewhere --run-id auto
 ```
-`review` is an alias for `all`: it runs Phase A, prints Phase B instructions,
-and renders automatically if a model already exists. Artifacts land in
+`review` runs Phase A, prints Phase B instructions, and renders automatically
+if a model already exists. Artifacts land in
 `<out-dir>[/<run-id>]/` (default `<repo>/.change-brief/`):
 `change-set.json`, `change-model.json`, `change-brief.html`.
 

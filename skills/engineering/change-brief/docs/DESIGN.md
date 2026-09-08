@@ -74,7 +74,7 @@ A is the working HEAD is flagged (`workingTreeDirty`, `dirtyCount`, stderr note
 collect <base> [--head <A>] [--repo <p>] [--out-dir <p>] [--run-id <n|auto>] [--offline] [--context f.json]
 render  <change-model.json> [--out <f>] [--change-set <f>] [--out-dir <p>]
 verify  <change-set.json> <change-model.json>   |  verify [--repo <p>] [--run-id <n|auto>]
-all     <base> … (= review) — collect + Phase B guidance, renders if model exists
+review  <base> — collect + Phase B guidance, renders if model exists
 ```
 
 Path model: `--repo` = target git repo (default cwd, required if not a repo);
