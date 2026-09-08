@@ -105,8 +105,3 @@ prompts/               the two chat prompts for the model step
 schemas/               JSON schemas of the artifacts
 docs/DESIGN.md         this file
 ```
-
-## Non-goals
-
-PR/ticket enrichment, CI/PR posting, aggregation across branches, token/cost
-tracking, an in-CLI LLM client — all out of scope by design.
