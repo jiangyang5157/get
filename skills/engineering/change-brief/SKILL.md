@@ -32,17 +32,36 @@ node <this-skill-dir>/bin/run.mjs review main --head feat/x --repo /path/to/repo
 already exists. Artifacts: `change-set.json` · `change-model.json` ·
 `change-brief.html` in `<out-dir>[/<run-id>]/` (default `<repo>/.change-brief/`).
 
+**Locating the files**: when you run `review`/`collect` yourself you cannot see
+its terminal output — find the artifacts on disk instead. Default location is
+`<repo>/.change-brief/`; with `--run-id` they move to
+`<repo>/.change-brief/<run-id>/`; with `--repo` use that path as `<repo>`.
+If unsure, run `ls` under `.change-brief/` to confirm the actual files.
+
 1. **Phase A** — deterministic, no LLM. Run `review`/`collect`, then read the
-   printed `change-set.json`.
-2. **Phase B** — the LLM step, done in THIS conversation: read that
+   produced `change-set.json` (locate it as above).
+2. **Phase B** — the LLM step, done in this same session: read that
    `change-set.json`; run `prompts/summarize.md`, then `prompts/tests.md`;
-   write the single final JSON to the `change-model.json` path `review` printed
-   (default `.change-brief/change-model.json`). Hand-edits allowed; re-render
-   afterwards.
-3. **Phase C** — deterministic. Run the copy-paste-ready
-   `render <model> --change-set <change-set>` command, then open the HTML.
+   write the single final JSON as `change-model.json` next to the change-set.
+   Hand-edits allowed; re-render afterwards.
+3. **Phase C** — deterministic. Run
+   `render <change-model.json> --change-set <change-set.json>`, then open the
+   produced HTML.
+
+## Limits
+
+- Compares **committed** content only — uncommitted working-tree edits are
+  never part of the brief (a dirty tree is flagged when A is the checked-out
+  HEAD). If the user asks to review uncommitted work, say so and suggest
+  committing or stashing first.
+- Not a full-repo analysis: only the A-vs-B change is examined.
+- B (and A when given) must resolve locally or on origin; if a ref does not
+  exist anywhere the run aborts with a clear message.
 
 ## Guardrails for Phase B
+
+Work from the actual `change-set.json` you located above — never invent
+files/lines that are not in it.
 
 - Evidence must be exact `path:line` covered by
   `change-set.json` → `changedLines[path].ranges` (deleted lines cite
