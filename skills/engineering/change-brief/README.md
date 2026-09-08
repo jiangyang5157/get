@@ -52,7 +52,6 @@ model and re-render anytime.
 | Review a specific branch vs `main` | `node bin/run.mjs review main --head feat/x` |
 | Compare against a tag / any ref | `node bin/run.mjs review v2.0 --head feat/x` |
 | Review from outside the repo | `node bin/run.mjs review main --repo /path/to/repo` |
-| Offline (no network) | add `--offline` (needs refs already local) |
 
 A or B that doesn't exist anywhere prints a clear abort message.
 

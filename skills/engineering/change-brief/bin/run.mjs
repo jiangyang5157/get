@@ -31,10 +31,10 @@ function autoRunId(changeSet) {
 function usage() {
   return `Usage:
   node bin/run.mjs collect <base> [--head <A>] [--repo <path>] [--out-dir <path>] [--run-id <name|auto>]
-                        [--offline] [--context repo-context.json]
+                        [--context repo-context.json]
   node bin/run.mjs render  <change-model.json> [--out <file>] [--change-set <file>] [--out-dir <path>]
   node bin/run.mjs review  <base> [--head <A>] [--repo <path>] [--out-dir <path>] [--run-id <name|auto>]
-                        [--model <file>] [--offline] [--context repo-context.json]
+                        [--model <file>] [--context repo-context.json]
   node bin/run.mjs verify  [--repo <path>] [--out-dir <path>] [--run-id <name|auto>]
                         # or: verify <change-set.json> <change-model.json>
 
@@ -156,7 +156,6 @@ async function cmdCollect(pos, flags, repo) {
       base,
       from: flags.head || null,
       dirtyExclude: dirtyExcludeOf(repo, outDir, flags['run-id']),
-      offline: flags.offline === true || flags.offline === 'true',
       repoContext: loadContext(flags),
       cwd: repo,
     });
@@ -258,7 +257,6 @@ async function cmdReview(pos, flags, repo) {
       base,
       from: flags.head || null,
       dirtyExclude: dirtyExcludeOf(repo, outDir, flags['run-id']),
-      offline: flags.offline === true || flags.offline === 'true',
       repoContext: loadContext(flags),
       cwd: repo,
     });

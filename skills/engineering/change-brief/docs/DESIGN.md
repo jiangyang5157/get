@@ -49,8 +49,7 @@ without schema bumps. JSON schemas validate structure only.
 
 Both A and B resolve **locally first, then origin** (local branch / tag / sha /
 `origin/x` as-is; absent locally → fetched; absent everywhere → abort
-`Branch "<ref>" does not exist on origin.`, exit 1; offline uses local refs
-only). Diff direction is `B...A` — what A adds over its fork with B.
+`Branch "<ref>" does not exist on origin.`, exit 1). Diff direction is `B...A` — what A adds over its fork with B.
 
 When B resolves to a local branch that differs from `origin/<B>` (behind /
 ahead / diverged), `baseLocalNote` is set: printed on stderr and surfaced as a
@@ -71,7 +70,7 @@ A is the working HEAD is flagged (`workingTreeDirty`, `dirtyCount`, stderr note
 ## CLI surface reference
 
 ```
-collect <base> [--head <A>] [--repo <p>] [--out-dir <p>] [--run-id <n|auto>] [--offline] [--context f.json]
+collect <base> [--head <A>] [--repo <p>] [--out-dir <p>] [--run-id <n|auto>] [--context f.json]
 render  <change-model.json> [--out <f>] [--change-set <f>] [--out-dir <p>]
 verify  <change-set.json> <change-model.json>   |  verify [--repo <p>] [--run-id <n|auto>]
 review  <base> — collect + Phase B guidance, renders if model exists

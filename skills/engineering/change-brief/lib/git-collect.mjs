@@ -102,11 +102,11 @@ function isSensitiveFilename(p) {
  *   dirtyExclude?: string|null — pathspec to exclude from the dirty check
  *                                (e.g. ".change-brief" or ".out/foo"); relative
  *                                to the repo root. null/"" = no exclusion.
- *   offline?, repoContext?, cwd?
+ *   repoContext?, cwd?
  * }
  * @returns {Promise<object>} change-set object (caller persists it)
  */
-export async function collect({ base, from = null, dirtyExclude = null, offline = false, repoContext = null, cwd = process.cwd() }) {
+export async function collect({ base, from = null, dirtyExclude = null, repoContext = null, cwd = process.cwd() }) {
   if (!isGitRepo(cwd)) throw new CollectError('Not a git repository');
 
   const headRef = from || 'HEAD'; // A — any git-resolvable ref (branch/tag/origin/x/sha)
@@ -174,7 +174,7 @@ export async function collect({ base, from = null, dirtyExclude = null, offline 
     out.baseSha = localBase.stdout.trim();
     // is it a *local branch* (not tag/sha)? if so it can be stale vs origin
     const isLocalBranch = gitOk(['rev-parse', '--verify', '--quiet', `refs/heads/${base}`], cwd);
-    if (isLocalBranch && !offline) {
+    if (isLocalBranch) {
       // refresh origin once so the staleness check is honest
       const fetch = runGit(['fetch', 'origin', '--prune'], { allowFail: true, cwd });
       if (fetch.status === 0) {
@@ -198,8 +198,6 @@ export async function collect({ base, from = null, dirtyExclude = null, offline 
         }
       }
     }
-  } else if (offline) {
-    throw new CollectError(`Branch "${base}" is not available locally (offline). Ending skill.`);
   } else {
     // local miss → origin fallback
     const fetch = runGit(['fetch', 'origin', '--prune'], { allowFail: true, cwd });
@@ -224,19 +222,13 @@ export async function collect({ base, from = null, dirtyExclude = null, offline 
   let headGitRef = headRef; // the ref actually usable in git commands
   if (!headResolved) {
     const remoteHead = `refs/remotes/origin/${headRef}`;
-    if (offline) {
-      if (!gitOk(['rev-parse', '--verify', '--quiet', remoteHead], cwd)) {
-        throw new CollectError(`Branch "${headRef}" is not available locally (offline). Ending skill.`);
-      }
-    } else {
-      const lsA = runGit(['ls-remote', '--heads', 'origin', headRef], { allowFail: true, cwd });
-      if (lsA.status !== 0 || lsA.stdout.trim() === '') {
-        throw new CollectError(`Branch "${headRef}" does not exist on origin. Ending skill.`);
-      }
-      const fetchA = runGit(['fetch', 'origin', `${headRef}:${remoteHead}`], { allowFail: true, cwd });
-      if (fetchA.status !== 0) {
-        throw new CollectError(`Branch "${headRef}" does not exist on origin. Ending skill.`);
-      }
+    const lsA = runGit(['ls-remote', '--heads', 'origin', headRef], { allowFail: true, cwd });
+    if (lsA.status !== 0 || lsA.stdout.trim() === '') {
+      throw new CollectError(`Branch "${headRef}" does not exist on origin. Ending skill.`);
+    }
+    const fetchA = runGit(['fetch', 'origin', `${headRef}:${remoteHead}`], { allowFail: true, cwd });
+    if (fetchA.status !== 0) {
+      throw new CollectError(`Branch "${headRef}" does not exist on origin. Ending skill.`);
     }
     out.headBranch = `origin/${headRef}`;
     out.headSha = runGit(['rev-parse', remoteHead], { cwd }).stdout.trim();

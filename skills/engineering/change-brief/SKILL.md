@@ -1,6 +1,6 @@
 ---
 name: change-brief
-description: Produce a local, visual code-review brief (summary, risks, test ideas) comparing branch/ref A against required branch B. Both refs resolve locally first, then from origin (--offline uses local only); a missing ref aborts. A defaults to the current HEAD and can be overridden with --head (any local branch, tag, sha, or origin/x; no checkout needed). B may also be a tag or local branch; a stale local B is flagged. Use when the user asks to review/preview what a branch changes before a PR/CR, compare two branches/refs, or wants structured test ideas for a branch diff. Runs three phases (git collect → LLM model → HTML render); the CLI never calls an LLM.
+description: Produce a local, visual code-review brief (summary, risks, test ideas) comparing branch/ref A against required branch B. Both refs resolve locally first, then from origin; a missing ref aborts. A defaults to the current HEAD and can be overridden with --head (any local branch, tag, sha, or origin/x; no checkout needed). B may also be a tag or local branch; a stale local B is flagged. Use when the user asks to review/preview what a branch changes before a PR/CR, compare two branches/refs, or wants structured test ideas for a branch diff. Runs three phases (git collect → LLM model → HTML render); the CLI never calls an LLM.
 disable-model-invocation: true
 ---
 
@@ -76,7 +76,7 @@ if a model already exists. Artifacts land in
 
 ## Notes
 
-- Requires Node ≥ 18, git; network only for `git fetch origin` (or `--offline`).
+- Requires Node ≥ 18 and git; network needed for `git fetch origin`.
 - Everything stays local; the CLI never calls an LLM and never uploads.
 - Add `.change-brief/` to `.gitignore` when artifacts live inside the repo.
 - Full CLI and the level × specificity test contract: see README.md.
