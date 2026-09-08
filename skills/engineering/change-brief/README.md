@@ -1,7 +1,6 @@
 # Change Brief
 
-Turn git changes into a **one-page visual review brief** - what changed, the risks to check, concrete test ideas.
-> The only network call is `git fetch`, nothing is uploaded. Requires Node ≥ 18.
+Turn git changes into a **one-page visual review brief** - what changed, the risks to check, concrete test ideas. The only network call is `git fetch`, nothing is uploaded. Requires Node ≥ 18.
 
 
 ```text
@@ -10,7 +9,7 @@ branch A ──┐
 branch B ──┘
 ```
 
-Every brief is built in three phases:
+Every request runs in three phases:
 
 | | **Phase A** · collect | **Phase B** · model | **Phase C** · render |
 |---|---|---|---|
@@ -23,9 +22,8 @@ Every brief is built in three phases:
 
 ## Use cases
 
-Ask an agent; every request runs `review` → model → HTML and produces the same
-full brief — whether you then read it all, just the summary, or only the test
-ideas is up to you:
+In a bare terminal, `review` stops after Phase A — the model step needs an
+LLM. `collect`, `verify`, `render` are available separately for scripts.
 
 | You say | review runs |
 |---|---|
@@ -36,9 +34,6 @@ ideas is up to you:
 | "Give me test ideas for this change" | `review main` |
 | "Review the current branch of `/path/to/repo` vs `main`" | `review main --repo /path/to/repo` |
 | "Compare `feat/x` vs `main` in `/path/to/repo`" | `review main --head feat/x --repo /path/to/repo` |
-
-In a bare terminal, `review` stops after Phase A — the model step needs an
-LLM. `collect`, `verify`, `render` are available separately for scripts.
 
 ---
 

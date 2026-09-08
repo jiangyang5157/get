@@ -32,7 +32,7 @@ function usage() {
   return `Usage:
   node bin/run.mjs collect <base> [--head <A>] [--repo <path>] [--out-dir <path>] [--run-id <name|auto>]
                         [--context repo-context.json]
-  node bin/run.mjs render  <change-model.json> [--out <file>] [--change-set <file>] [--out-dir <path>]
+  node bin/run.mjs render  <change-model.json> [--change-set <file>] [--out-dir <path>]
   node bin/run.mjs review  <base> [--head <A>] [--repo <path>] [--out-dir <path>] [--run-id <name|auto>]
                         [--model <file>] [--context repo-context.json]
   node bin/run.mjs verify  [--repo <path>] [--out-dir <path>] [--run-id <name|auto>]
@@ -57,8 +57,10 @@ function warnNotes(changeSet) {
   }
 }
 
-const VALUE_FLAGS = new Set(['out', 'out-dir', 'change-set', 'context', 'model', 'head', 'repo', 'run-id']);
+const VALUE_FLAGS = new Set(['out-dir', 'change-set', 'context', 'model', 'head', 'repo', 'run-id']);
+const KNOWN_FLAGS = new Set([...VALUE_FLAGS, 'help', 'h']);
 
+/** Parse argv. Throws on unknown --flag so typos (e.g. --out) fail loudly. */
 function parseFlags(argv) {
   const pos = [];
   const flags = {};
@@ -67,6 +69,10 @@ function parseFlags(argv) {
     if (a.startsWith('--')) {
       const eq = a.indexOf('=');
       const key = eq >= 0 ? a.slice(2, eq) : a.slice(2);
+      if (!KNOWN_FLAGS.has(key)) {
+        process.stderr.write(`Unknown flag: --${key}\n`);
+        process.exit(2);
+      }
       if (eq >= 0) {
         flags[key] = a.slice(eq + 1);
       } else if (VALUE_FLAGS.has(key)) {
@@ -182,12 +188,10 @@ function cmdRender(pos, flags) {
 
   const html = renderChangeBrief(model, changeSet);
   // default HTML goes next to the model file (most predictable across repos);
-  // --out or --out-dir override it
-  const outPath = flags.out
-    ? path.resolve(flags.out)
-    : flags['out-dir']
-      ? path.join(path.resolve(flags['out-dir']), 'change-brief.html')
-      : path.join(path.dirname(modelPath), 'change-brief.html');
+  // --out-dir relocates it (fixed file name)
+  const outPath = flags['out-dir']
+    ? path.join(path.resolve(flags['out-dir']), 'change-brief.html')
+    : path.join(path.dirname(modelPath), 'change-brief.html');
   fs.mkdirSync(path.dirname(outPath), { recursive: true });
   fs.writeFileSync(outPath, html);
   process.stdout.write(`Wrote ${outPath}\n`);
@@ -282,9 +286,7 @@ function cmdReview(pos, flags, repo) {
       fail(`change-model invalid at ${first.path}: ${first.msg}`);
     }
     const html = renderChangeBrief(model, changeSet);
-    const outPath = flags.out
-      ? path.resolve(flags.out)
-      : path.join(runDir, 'change-brief.html');
+    const outPath = path.join(runDir, 'change-brief.html');
     fs.mkdirSync(path.dirname(outPath), { recursive: true });
     fs.writeFileSync(outPath, html);
     process.stdout.write(`Rendered ${relOut(outDir, outPath)}\n`);
