@@ -119,7 +119,7 @@ export function collect({ base, from = null, dirtyExclude = null, repoContext = 
     empty: false,
     summaryHint: null,
     totalAdded: 0, totalDeleted: 0,
-    files: [], topDirs: [], commits: [], changedLines: {}, sensitiveTouch: {},
+    files: [], topDirs: [], commits: [], commitsTruncated: false, changedLines: {}, sensitiveTouch: {},
     contentOmitted: {}, repoContext,
   };
 
@@ -293,6 +293,8 @@ export function collect({ base, from = null, dirtyExclude = null, repoContext = 
     { cwd },
   ).stdout;
   const commitLines = logRaw.split('\n').filter(Boolean);
+  // if we got COMMITS_CAP+1 lines, the list was truncated at the cap
+  out.commitsTruncated = commitLines.length > COMMITS_CAP;
   out.commits = commitLines.slice(0, COMMITS_CAP).map((l) => {
     const [hash, author, dateIso, ...rest] = l.split('\t');
     return { hash, author, dateIso, subject: rest.join('\t') };

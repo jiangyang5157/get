@@ -26,7 +26,9 @@ You are analyzing a git change for code review. You have ONE input: `change-set.
 
 - `headBranch` → `baseBranch` (`baseRef`, `baseSha`, `mergeBaseSha`)
 - `files`: path/status/added/deleted/binary per file (binary files have no text)
-- `commits`: hash/author/date/subject
+- `commits`: hash/author/date/subject — if `commitsTruncated: true`, this
+  list is capped (oldest commits cut); describe overall intent from what you
+  see but do not claim to know the full history
 - `changedLines[path]`:
   - `.ranges.added/.deleted`: COMPLETE line-number anchors `{start, count}` —
     these define every citeable changed line, uncapped even for large diffs;

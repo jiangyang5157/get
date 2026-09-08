@@ -188,6 +188,9 @@
         }
       }
     },
+    "commitsTruncated": {
+      "type": "boolean"
+    },
     "changedLines": {
       "type": [
         "object",
