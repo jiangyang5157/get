@@ -1,4 +1,4 @@
-# Phase B — Prompt 2/2: Test suggestions (for the author and testers)
+# Phase B — Prompt 2/2: Test ideas (for the author and testers)
 
 Continue the SAME conversation as Prompt 1. The change-model.json you produced is
 the current draft. Your job now: fill its `tests` section. Do NOT change any other

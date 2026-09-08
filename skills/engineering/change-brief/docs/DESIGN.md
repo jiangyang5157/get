@@ -36,7 +36,7 @@ point at a real changed line (checked against `ranges`). Vocabulary
 profile (`lib/profiles/engineering.mjs`), keeping non-engineering profiles open
 without schema bumps. JSON schemas validate structure only.
 
-## Test-suggestion contract (level × specificity)
+## Test-ideas contract (level × specificity)
 
 - `unit` → code-level & concrete (real function, real inputs);
 - `integration` → module-level behavior;

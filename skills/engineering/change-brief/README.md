@@ -1,7 +1,7 @@
 # Change Brief
 
 Turn any git branch/ref change into a **one-page visual review brief**: what
-changed, the risks a reviewer should check, and concrete test suggestions —
+changed, the risks a reviewer should check, and concrete test ideas —
 generated locally, no upload, no dependencies.
 
 ```
@@ -13,9 +13,9 @@ generated locally, no upload, no dependencies.
 │    Summary            what & why (headline + context)                │
 │    What changed       per-directory churn, files expandable          │
 │    Risks              severity/category + file:line evidence chips   │
-│    Test               suggested happy-path & edge cases              │
+│    Test ideas         suggested happy-path & edge cases              │
 └──────────────────────────────────────────────────────────────────────┘
-        Summary & Risks  → for reviewers     Test → for authors/testers
+        Summary & Risks  → for reviewers     Test ideas → for authors/testers
 ```
 
 - **Local & safe**: runs on your machine; the only network call is `git fetch`.
@@ -99,7 +99,7 @@ put artifacts elsewhere · `--offline` no fetching.
   (base resolved to a local branch behind/ahead of `origin/<base>`).
 - **Risks carry evidence chips** (`src/calc.js:12`) — select to copy.
   Findings never quote secret values, only locations.
-- **Test suggestions follow a level contract**: `unit` = concrete code-level
+- **Test ideas follow a level contract**: `unit` = concrete code-level
   cases; `e2e` = behaviour-level scenarios with `{PLACEHOLDER}`s you fill in —
   the tool never fabricates screens, accounts, or flows it can't see.
 - Reviewing a **large release diff** is fine: the brief stays compact (per-file

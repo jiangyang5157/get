@@ -245,7 +245,7 @@ export function renderChangeBrief(model, changeSet = null) {
   const hiddenEdges = edges.slice(VISIBLE_EDGES);
 
   const testsSection = `<section>
-    <h2>Test</h2>
+    <h2>Test ideas</h2>
     ${happyAll.length ? `<h3 class="sub">Happy path</h3><ul class="rows">${happy.map(happyRow).join('')}</ul>${happyRest > 0 ? detailsRow(`Show ${happyRest} more`, `<ul class="rows">${happyAll.slice(6).map(happyRow).join('')}</ul>`) : ''}` : ''}
     ${edges.length ? `<h3 class="sub">Edge cases</h3><ul class="rows">${visibleEdges.map(edgeRow).join('')}</ul>` : ''}
     ${hiddenEdges.length ? detailsRow(`Show all ${edges.length} edge cases`, `<ul class="rows">${hiddenEdges.map(edgeRow).join('')}</ul>`) : ''}

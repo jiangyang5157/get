@@ -1,6 +1,6 @@
 ---
 name: change-brief
-description: Produce a local, visual code-review brief (summary, risks, test suggestions) comparing branch/ref A against required branch B. Both refs resolve locally first, then from origin (--offline uses local only); a missing ref aborts. A defaults to the current HEAD and can be overridden with --head (any local branch, tag, sha, or origin/x; no checkout needed). B may also be a tag or local branch; a stale local B is flagged. Use when the user asks to review/preview what a branch changes before a PR/CR, compare two branches/refs, or wants structured test ideas for a branch diff. Runs three phases (git collect → LLM model → HTML render); the CLI never calls an LLM.
+description: Produce a local, visual code-review brief (summary, risks, test ideas) comparing branch/ref A against required branch B. Both refs resolve locally first, then from origin (--offline uses local only); a missing ref aborts. A defaults to the current HEAD and can be overridden with --head (any local branch, tag, sha, or origin/x; no checkout needed). B may also be a tag or local branch; a stale local B is flagged. Use when the user asks to review/preview what a branch changes before a PR/CR, compare two branches/refs, or wants structured test ideas for a branch diff. Runs three phases (git collect → LLM model → HTML render); the CLI never calls an LLM.
 disable-model-invocation: true
 ---
 
@@ -14,7 +14,7 @@ curated HTML review brief. The HTML artifact has four sections:
    individual files expandable with the reason each file changed.
 3. **Risks** — for reviewers, each with severity/category and copyable
    `file:line` evidence chips.
-4. **Test** — suggested happy-path and edge cases for authors/testers.
+4. **Test ideas** — suggested happy-path and edge cases for authors/testers.
 
 It mimics a good reviewer, not a test-automation engine: e2e suggestions are
 behaviour-level (Given/When/Then) and never invent screens/accounts/IDs —

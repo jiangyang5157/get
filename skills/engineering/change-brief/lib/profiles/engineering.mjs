@@ -6,7 +6,7 @@ export default {
     tool: 'Change Brief',
     phaseNote: 'local-only · no code uploaded',
     reviewerCallout: 'Sections above the tests section are for code reviewers.',
-    testsCallout: 'Test suggestions below are for the author and testers.',
+    testsCallout: 'Test ideas below are for the author and testers.',
     emptyHeadline: 'No committed changes vs',
   },
   riskCategories: [
