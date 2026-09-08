@@ -7,8 +7,8 @@ import domain from './engineering.mjs';
 // Content snapshot budget (text lines embedded into change-set.json).
 const PER_FILE_ADDED_CAP = 400;   // added text lines per file
 const PER_FILE_DELETED_CAP = 200; // deleted text lines per file
-const GLOBAL_TEXT_CAP = 6000;     // added+deleted text lines across all files
-const COMMITS_CAP = 500;
+const GLOBAL_TEXT_CAP = 8000;     // added+deleted text lines across all files
+const COMMITS_CAP = 800;
 
 const GIT_ENV = { ...process.env, LC_ALL: 'C' };
 

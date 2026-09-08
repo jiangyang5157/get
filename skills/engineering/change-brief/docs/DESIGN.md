@@ -21,7 +21,7 @@ and re-render. The CLI never calls an LLM.
   `{start, count}`; never truncated, so even a 10k-line rewrite keeps every
   changed line citeable, and range lists stay tiny (merged runs → small JSON).
 - `.text.added/.deleted` — the actual line text the LLM may read; capped per
-  file (added 400 / deleted 200) and per run (6000 lines total);
+  file (added 400 / deleted 200) and per run (8000 lines total);
   `truncated: true` when capped.
 - Evidence validation (`verify`, `render --change-set`) checks `.ranges`
   (complete), so reviewers can cite any real changed line. The prompts forbid

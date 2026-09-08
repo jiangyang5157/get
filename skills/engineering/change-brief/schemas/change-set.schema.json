@@ -25,7 +25,8 @@
     "commits",
     "changedLines",
     "sensitiveTouch",
-    "repoContext"
+    "repoContext",
+    "headSpec"
   ],
   "properties": {
     "schemaVersion": {
@@ -85,9 +86,6 @@
     "totalDeleted": {
       "type": "integer",
       "minimum": 0
-    },
-    "contentTruncated": {
-      "type": "boolean"
     },
     "files": {
       "type": "array",
