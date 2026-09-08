@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "private": true,
   "type": "module",
-  "description": "Local git change brief: deterministic collect/render scripts + one LLM pass in chat, into a curated HTML review (what changed, risks, test ideas). Zero deps, nothing uploaded.",
+  "description": "git diff → (one LLM pass, in chat) → HTML review brief: what changed, risks, test ideas.",
   "engines": {
     "node": ">=18"
   },
