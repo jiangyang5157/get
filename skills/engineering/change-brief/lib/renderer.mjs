@@ -8,7 +8,7 @@ const VISIBLE_EDGES = 8;
 const FILES_PER_DIR = 12;
 const MAX_DIRS = 12;
 
-/** Plain-language hints for category chips (hover). Keyed by profile vocabulary. */
+/** Plain-language hints for category chips (hover). */
 const CATEGORY_HINTS = {
   config: 'config/env files — verify values and that no secrets are committed',
   db: 'database, migrations, schema, SQL — check destructive changes, locking, data loss',

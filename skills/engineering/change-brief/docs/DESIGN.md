@@ -33,8 +33,7 @@ and re-render. The CLI never calls an LLM.
 `render --change-set` and `verify` reject models whose risk evidence does not
 point at a real changed line (checked against `ranges`). Vocabulary
 (category/severity/level/verify) is validated at runtime against the declared
-profile (`lib/profiles/engineering.mjs`), keeping non-engineering profiles open
-without schema bumps. JSON schemas validate structure only.
+domain vocabulary (`lib/engineering.mjs`). JSON schemas validate structure only.
 
 ## Test-ideas contract (level × specificity)
 
@@ -96,7 +95,7 @@ bin/run.mjs      CLI (collect · render · verify · review)
 lib/             collector · renderer · validator · check-model
 prompts/         the two chat prompts for the model step
 schemas/         JSON schemas of the artifacts
-lib/profiles/    risk/test vocabulary (engineering)
+lib/engineering.mjs  domain vocabulary & tag rules
 docs/DESIGN.md   this file
 ```
 

@@ -6,7 +6,6 @@
   "additionalProperties": false,
   "required": [
     "schemaVersion",
-    "profile",
     "head",
     "base",
     "title",
@@ -18,9 +17,6 @@
   "properties": {
     "schemaVersion": {
       "const": "1"
-    },
-    "profile": {
-      "type": "string"
     },
     "head": {
       "type": "string"

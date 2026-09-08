@@ -2,7 +2,7 @@
 
 Continue the SAME conversation as Prompt 1. The change-model.json you produced is
 the current draft. Your job now: fill its `tests` section. Do NOT change any other
-field (`summary`, `risks`, `title`, `head`, `base`, `schemaVersion`, `profile`).
+field (`summary`, `risks`, `title`, `head`, `base`, `schemaVersion`).
 
 ## Input
 

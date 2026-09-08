@@ -51,7 +51,6 @@ set to `{ "happyPath": [], "edgeCases": [] }` — prompt 2 fills it.
 ```jsonc
 {
   "schemaVersion": "1",
-  "profile": "<value of change-set.profile>",
   "head": "<change-set.headBranch>",
   "base": "<change-set.baseBranch>",
   "title": "Concise review/PR title from the change",
@@ -73,7 +72,7 @@ set to `{ "happyPath": [], "edgeCases": [] }` — prompt 2 fills it.
 }
 ```
 
-### Risk category vocabulary (profile: engineering)
+### Risk category vocabulary
 config · db · security · dependency · logging · secrets · pii · exceptions · behavior
 
 Severity must be one of: high | medium | low. Risk `id`s are R1, R2, …
@@ -82,7 +81,7 @@ Reference risk evidence ONLY from visible `changedLines`.
 ### Empty branch rule
 If `change-set.empty` is true, output exactly:
 ```json
-{ "schemaVersion": "1", "profile": "...", "head": "...", "base": "...",
+{ "schemaVersion": "1", "head": "...", "base": "...",
   "title": "No committed changes",
   "summary": { "headline": "No committed changes vs <base>.", "why": "…", "perFile": [] },
   "risks": [], "scannedCategories": [],

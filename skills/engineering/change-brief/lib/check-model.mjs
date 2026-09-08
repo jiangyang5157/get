@@ -1,35 +1,13 @@
 // Combined validation for change-model.json:
-//  1) structural schema  -> schemas/change-model.schema.json
-//  2) vocabulary         -> the profile the model declares (lib/profiles/*.mjs)
+//  1) structural schema -> schemas/change-model.schema.json
+//  2) vocabulary        -> the engineering domain vocabulary
 //  3) evidence cross-check against change-set.json when provided (deterministic gate)
-import path from 'node:path';
-import { fileURLToPath, pathToFileURL } from 'node:url';
 import { validateObject, validateModelVocab } from './validator.mjs';
+import domain from './engineering.mjs';
 
-const profilesDir = path.join(path.dirname(fileURLToPath(import.meta.url)), 'profiles');
-const profileCache = new Map();
-
-async function loadProfile(id) {
-  if (profileCache.has(id)) return profileCache.get(id);
-  try {
-    const mod = await import(pathToFileURL(path.join(profilesDir, `${id}.mjs`)).href);
-    const profile = mod.default;
-    profileCache.set(id, profile);
-    return profile;
-  } catch {
-    profileCache.set(id, null);
-    return null;
-  }
-}
-
-export async function checkModel(model, changeSet = null) {
+export function checkModel(model, changeSet = null) {
   const violations = validateObject('change-model', model).violations;
-  const profile = model?.profile ? await loadProfile(model.profile) : null;
-  if (model && profile == null) {
-    violations.push({ path: 'profile', msg: `profile "${model.profile}" is not installed` });
-  } else if (profile) {
-    violations.push(...validateModelVocab(model, profile));
-  }
+  violations.push(...validateModelVocab(model, domain));
   if (violations.length === 0 && changeSet) {
     violations.push(...checkEvidence(model, changeSet));
   }

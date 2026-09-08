@@ -67,7 +67,7 @@ if a model already exists. Artifacts land in
   ranges stay complete so a line may be citeable but not readable; do not
   fabricate its content.
 - Vocabulary (risk category / severity / level / verify) must come from the
-  declared profile (`lib/profiles/engineering.mjs`). The CLI `verify` command
+  domain vocabulary (`lib/engineering.mjs`). The CLI `verify` command
   enforces schema + vocabulary + evidence; violations are rejected.
 - e2e suggestions stay behaviour-level with `{PLACEHOLDER}` for app specifics.
 - Never echo secret values or PII — locations only.

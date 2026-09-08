@@ -1,14 +1,7 @@
-// Engineering domain profile (v1).
-// Vocabulary + tag rules for the engineering domain (see schemas for shape).
+// Engineering domain vocabulary + tag rules (risk/test words, sensitive-touch
+// path heuristics). Single domain — kept as one plain module, imported by the
+// collector and the model checker.
 export default {
-  id: 'engineering',
-  labels: {
-    tool: 'Change Brief',
-    phaseNote: 'local-only · no code uploaded',
-    reviewerCallout: 'Sections above the tests section are for code reviewers.',
-    testsCallout: 'Test ideas below are for the author and testers.',
-    emptyHeadline: 'No committed changes vs',
-  },
   riskCategories: [
     'config', 'db', 'security', 'dependency', 'logging',
     'secrets', 'pii', 'exceptions', 'behavior',

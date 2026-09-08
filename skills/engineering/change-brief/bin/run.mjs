@@ -242,7 +242,7 @@ async function cmdVerify(pos, flags) {
     const first = check.violations[0];
     fail(`change-model invalid at ${first.path}: ${first.msg}`);
   }
-  process.stdout.write('OK: change-model matches schema, profile vocabulary, and change-set evidence.\n');
+  process.stdout.write('OK: change-model matches schema, domain vocabulary, and change-set evidence.\n');
   return 0;
 }
 

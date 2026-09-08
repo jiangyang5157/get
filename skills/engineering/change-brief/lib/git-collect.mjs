@@ -2,12 +2,7 @@
 // Runs ONLY read-only git (plus remote-tracking ref fetches) and writes
 // change-set.json. Never modifies the working tree.
 import { spawnSync } from 'node:child_process';
-import path from 'node:path';
-import { fileURLToPath, pathToFileURL } from 'node:url';
-
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-
-const PROFILE = 'engineering';
+import domain from './engineering.mjs';
 
 // Content snapshot budget (text lines embedded into change-set.json).
 const PER_FILE_ADDED_CAP = 400;   // added text lines per file
@@ -76,10 +71,10 @@ function stripDiffPrefix(p) {
   return p.replace(/^[ab]\//, '');
 }
 
-/** Tag a changed path into sensitive-touch categories per profile tagRules. */
-export function tagPath(profile, p) {
+/** Tag a changed path into sensitive-touch categories per domain tagRules. */
+export function tagPath(domain, p) {
   const tags = [];
-  for (const [tag, patterns] of Object.entries(profile.tagRules || {})) {
+  for (const [tag, patterns] of Object.entries(domain.tagRules || {})) {
     if (patterns.some((re) => new RegExp(re, 'i').test(p))) tags.push(tag);
   }
   return tags;
@@ -113,7 +108,6 @@ export async function collect({ base, from = null, dirtyExclude = null, repoCont
   const headIsWorkingHead = headRef === 'HEAD';
   const out = {
     schemaVersion: '1',
-    profile: PROFILE,
     generator: 'change-brief-collect',
     headSpec: headRef,
     headBranch: null, headSha: null, detachedHead: false,
@@ -310,10 +304,8 @@ export async function collect({ base, from = null, dirtyExclude = null, repoCont
   out.changedLines = changedLines;
 
   // 10. sensitive-touch tags + redact sensitive file content
-  const profileMod = await import(pathToFileURL(path.join(__dirname, 'profiles', `${PROFILE}.mjs`)).href);
-  const profile = profileMod.default;
   for (const f of files) {
-    const tags = tagPath(profile, f.path);
+    const tags = tagPath(domain, f.path);
     if (tags.length) out.sensitiveTouch[f.path] = tags;
     if (isSensitiveFilename(f.path)) {
       out.contentOmitted[f.path] = 'sensitive-filename';

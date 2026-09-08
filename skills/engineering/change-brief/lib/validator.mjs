@@ -5,14 +5,13 @@
 // API:
 //   validate(schema, value) -> [] | [violation...]   (violation = { path, msg })
 //   validateFile(schemaPath, jsonPath)                (loads + validates)
-//   loadSchema(name), loadProfile(id), validateModelVocab(model, profile)
+//   loadSchema(name), validateModelVocab(model, domain)
 import fs from 'node:fs';
 import path from 'node:path';
-import { fileURLToPath, pathToFileURL } from 'node:url';
+import { fileURLToPath } from 'node:url';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 export const schemasDir = path.join(here, '..', 'schemas');
-export const profilesDir = path.join(here, 'profiles');
 
 function esc(s) {
   return String(s).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -127,38 +126,32 @@ export function validateObject(schemaName, value) {
   return { ok: violations.length === 0, violations };
 }
 
-export function loadProfile(id) {
-  const p = path.join(profilesDir, `${id}.mjs`);
-  if (!fs.existsSync(p)) return null;
-  return import(pathToFileURL(p).href);
-}
-
-/** Validate model vocabulary (category/severity/level/verify/tags) against a profile. */
-export function validateModelVocab(model, profile) {
+/** Validate model vocabulary (category/severity/level/verify/tags) against the domain vocabulary. */
+export function validateModelVocab(model, domain) {
   const out = [];
   const allowed = (list) => new Set(list);
-  const cats = allowed(profile.riskCategories);
-  const sevs = allowed(profile.severities);
-  const lvls = allowed(profile.testLevels);
-  const verifs = allowed(profile.verifyMethods);
-  const edgeCats = allowed(profile.edgeCategories);
+  const cats = allowed(domain.riskCategories);
+  const sevs = allowed(domain.severities);
+  const lvls = allowed(domain.testLevels);
+  const verifs = allowed(domain.verifyMethods);
+  const edgeCats = allowed(domain.edgeCategories);
 
   (model.risks || []).forEach((r, i) => {
     const at = `risks[${i}]`;
-    if (!cats.has(r.category)) out.push({ path: `${at}.category`, msg: `category "${r.category}" not in profile vocabulary` });
-    if (!sevs.has(r.severity)) out.push({ path: `${at}.severity`, msg: `severity "${r.severity}" not in profile vocabulary` });
+    if (!cats.has(r.category)) out.push({ path: `${at}.category`, msg: `category "${r.category}" not in domain vocabulary` });
+    if (!sevs.has(r.severity)) out.push({ path: `${at}.severity`, msg: `severity "${r.severity}" not in domain vocabulary` });
   });
   const happy = model.tests?.happyPath || [];
   happy.forEach((t, i) => {
-    if (!lvls.has(t.level)) out.push({ path: `tests.happyPath[${i}].level`, msg: `level "${t.level}" not in profile vocabulary` });
-    if (!verifs.has(t.verify)) out.push({ path: `tests.happyPath[${i}].verify`, msg: `verify "${t.verify}" not in profile vocabulary` });
+    if (!lvls.has(t.level)) out.push({ path: `tests.happyPath[${i}].level`, msg: `level "${t.level}" not in domain vocabulary` });
+    if (!verifs.has(t.verify)) out.push({ path: `tests.happyPath[${i}].verify`, msg: `verify "${t.verify}" not in domain vocabulary` });
   });
   const edges = model.tests?.edgeCases || [];
   edges.forEach((e, i) => {
-    if (!edgeCats.has(e.category)) out.push({ path: `tests.edgeCases[${i}].category`, msg: `category "${e.category}" not in profile vocabulary` });
-    if (!sevs.has(e.severity)) out.push({ path: `tests.edgeCases[${i}].severity`, msg: `severity "${e.severity}" not in profile vocabulary` });
-    if (!lvls.has(e.level)) out.push({ path: `tests.edgeCases[${i}].level`, msg: `level "${e.level}" not in profile vocabulary` });
-    if (!verifs.has(e.verify)) out.push({ path: `tests.edgeCases[${i}].verify`, msg: `verify "${e.verify}" not in profile vocabulary` });
+    if (!edgeCats.has(e.category)) out.push({ path: `tests.edgeCases[${i}].category`, msg: `category "${e.category}" not in domain vocabulary` });
+    if (!sevs.has(e.severity)) out.push({ path: `tests.edgeCases[${i}].severity`, msg: `severity "${e.severity}" not in domain vocabulary` });
+    if (!lvls.has(e.level)) out.push({ path: `tests.edgeCases[${i}].level`, msg: `level "${e.level}" not in domain vocabulary` });
+    if (!verifs.has(e.verify)) out.push({ path: `tests.edgeCases[${i}].verify`, msg: `verify "${e.verify}" not in domain vocabulary` });
   });
   return out;
 }
