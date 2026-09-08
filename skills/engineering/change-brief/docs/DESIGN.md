@@ -48,7 +48,8 @@ domain vocabulary (`lib/engineering.mjs`). JSON schemas validate structure only.
 
 Both A and B resolve **locally first, then origin** (local branch / tag / sha /
 `origin/x` as-is; absent locally → fetched; absent everywhere → abort
-`Branch "<ref>" does not exist on origin.`, exit 1). Diff direction is `B...A` — what A adds over its fork with B.
+`Branch "<ref>" does not exist on origin.`, exit 1). Diff direction is
+`B...A` — what A adds over its fork with B.
 
 When B resolves to a local branch that differs from `origin/<B>` (behind /
 ahead / diverged), `baseLocalNote` is set: printed on stderr and surfaced as a
@@ -97,15 +98,15 @@ node bin/run.mjs render change-model.json --change-set change-set.json
 ## File layout
 
 ```
-bin/run.mjs      CLI (collect · render · verify · review)
-lib/             collector · renderer · validator · check-model
-prompts/         the two chat prompts for the model step
-schemas/         JSON schemas of the artifacts
-lib/engineering.mjs  domain vocabulary & tag rules
-docs/DESIGN.md   this file
+bin/run.mjs            CLI (collect · render · verify · review)
+lib/                   collector · renderer · validator · check-model
+lib/engineering.mjs     domain vocabulary & tag rules
+prompts/               the two chat prompts for the model step
+schemas/               JSON schemas of the artifacts
+docs/DESIGN.md         this file
 ```
 
 ## Non-goals
 
 PR/ticket enrichment, CI/PR posting, aggregation across branches, token/cost
-tracking, an in-CLI LLM client.
+tracking, an in-CLI LLM client — all out of scope by design.
