@@ -101,7 +101,7 @@ function isSensitiveFilename(p) {
  * }
  * @returns {Promise<object>} change-set object (caller persists it)
  */
-export async function collect({ base, from = null, dirtyExclude = null, repoContext = null, cwd = process.cwd() }) {
+export function collect({ base, from = null, dirtyExclude = null, repoContext = null, cwd = process.cwd() }) {
   if (!isGitRepo(cwd)) throw new CollectError('Not a git repository');
 
   const headRef = from || 'HEAD'; // A — any git-resolvable ref (branch/tag/origin/x/sha)

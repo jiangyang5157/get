@@ -98,15 +98,6 @@ function resolveRunDir(outDir, runId) {
   return runId ? path.join(outDir, runId) : outDir;
 }
 
-function rel(repoRoot, p) {
-  try {
-    const r = path.relative(repoRoot, p);
-    return r && !r.startsWith('..') ? r : p;
-  } catch {
-    return p;
-  }
-}
-
 function relOut(outDir, p) {
   try {
     const r = path.relative(outDir, p);
@@ -143,7 +134,7 @@ function loadContext(flags) {
   return JSON.parse(fs.readFileSync(flags.context, 'utf8'));
 }
 
-async function cmdCollect(pos, flags, repo) {
+function cmdCollect(pos, flags, repo) {
   const [base] = pos;
   if (!base) {
     process.stderr.write(`${usage()}\n\n`);
@@ -152,7 +143,7 @@ async function cmdCollect(pos, flags, repo) {
   const outDir = resolveOutDir(repo, flags);
   let changeSet;
   try {
-    changeSet = await collect({
+    changeSet = collect({
       base,
       from: flags.head || null,
       dirtyExclude: dirtyExcludeOf(repo, outDir, flags['run-id']),
@@ -174,7 +165,7 @@ async function cmdCollect(pos, flags, repo) {
   return 0;
 }
 
-async function cmdRender(pos, flags) {
+function cmdRender(pos, flags) {
   const [modelPathArg] = pos;
   if (!modelPathArg) fail('usage: render <change-model.json> required', 2);
   const modelPath = path.resolve(modelPathArg);
@@ -183,7 +174,7 @@ async function cmdRender(pos, flags) {
     ? loadJson(path.resolve(flags['change-set']), 'change-set')
     : null;
 
-  const check = await checkModel(model, changeSet);
+  const check = checkModel(model, changeSet);
   if (!check.ok) {
     const first = check.violations[0];
     fail(`change-model invalid at ${first.path}: ${first.msg}`);
@@ -206,7 +197,7 @@ async function cmdRender(pos, flags) {
   return 0;
 }
 
-async function cmdVerify(pos, flags) {
+function cmdVerify(pos, flags) {
   // Positional paths may be omitted when the run location is given:
   //   verify --repo <path> [--out-dir <path>] [--run-id <name|auto>]
   let [csPath, modelPath] = pos;
@@ -237,7 +228,7 @@ async function cmdVerify(pos, flags) {
   }
   const changeSet = JSON.parse(fs.readFileSync(csPath, 'utf8'));
   const model = loadJson(modelPath, 'change-model');
-  const check = await checkModel(model, changeSet);
+  const check = checkModel(model, changeSet);
   if (!check.ok) {
     const first = check.violations[0];
     fail(`change-model invalid at ${first.path}: ${first.msg}`);
@@ -246,14 +237,14 @@ async function cmdVerify(pos, flags) {
   return 0;
 }
 
-async function cmdReview(pos, flags, repo) {
+function cmdReview(pos, flags, repo) {
   const [base] = pos;
   if (!base) fail('usage: review <base> required', 2);
   const outDir = resolveOutDir(repo, flags);
   // Phase A
   let changeSet;
   try {
-    changeSet = await collect({
+    changeSet = collect({
       base,
       from: flags.head || null,
       dirtyExclude: dirtyExcludeOf(repo, outDir, flags['run-id']),
@@ -285,7 +276,7 @@ async function cmdReview(pos, flags, repo) {
   );
   if (modelGiven) {
     const model = loadJson(modelPath, 'change-model');
-    const check = await checkModel(model, changeSet);
+    const check = checkModel(model, changeSet);
     if (!check.ok) {
       const first = check.violations[0];
       fail(`change-model invalid at ${first.path}: ${first.msg}`);
@@ -303,7 +294,7 @@ async function cmdReview(pos, flags, repo) {
   return 0;
 }
 
-async function main() {
+function main() {
   const argv = process.argv.slice(2);
   if (argv.length === 0 || argv[0] === 'help' || argv[0] === '--help' || argv[0] === '-h') {
     process.stdout.write(`${usage()}\n`);
@@ -329,7 +320,9 @@ async function main() {
   }
 }
 
-main().then((code) => process.exit(code)).catch((e) => {
+try {
+  process.exit(main());
+} catch (e) {
   process.stderr.write(`Error: ${e.message}\n`);
   process.exit(1);
-});
+}

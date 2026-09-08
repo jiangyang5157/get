@@ -76,7 +76,7 @@ set to `{ "happyPath": [], "edgeCases": [] }` — prompt 2 fills it.
 config · db · security · dependency · logging · secrets · pii · exceptions · behavior
 
 Severity must be one of: high | medium | low. Risk `id`s are R1, R2, …
-Reference risk evidence ONLY from visible `changedLines`.
+Cite evidence per rule 2 (ranges) and describe content only from rule 3 (text).
 
 ### Empty branch rule
 If `change-set.empty` is true, output exactly:
