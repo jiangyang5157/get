@@ -12,9 +12,9 @@ prints two chat prompts that turn it into a model, and renders
 `change-brief.html` (Summary · What changed · Risks with `file:line` evidence ·
 Test ideas). A or B can be any branch / tag / sha / `origin/x`.
 
-```
+```text
 branch A ──┐
-           ├──▶ change-brief.html     (open in a browser)
+           ├──▶ change-brief.html
 branch B ──┘
 ```
 
@@ -32,6 +32,10 @@ is uploaded.
 | Review a specific branch vs `main` | `node bin/run.mjs review main --head feat/x` |
 | Compare against a tag / any ref | `node bin/run.mjs review v2.0 --head feat/x` |
 | Review a repo you're not inside | `node bin/run.mjs review main --head feat/x --repo /path/to/repo` |
+
+`review` is the full pipeline in one command. The other commands are its parts:
+`collect` (git → change-set.json) · `render` (model → HTML) · `verify`
+(model ↔ change-set check) — for manual or scripted control.
 
 Refs resolve locally first, then from origin; a missing one aborts with a clear
 message. Requires Node ≥ 18 and git.
