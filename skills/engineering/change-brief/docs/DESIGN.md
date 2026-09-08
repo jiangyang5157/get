@@ -81,6 +81,25 @@ Path model: `--repo` = target git repo (default cwd, required if not a repo);
 subfolder for run history, `auto` = `<A8>_<B8>_<ts>` (timestamp keeps re-runs
 distinct). Exit codes: 0 success · 1 abort/validation · 2 usage.
 
+Driving the phases manually (what `review` does under the hood):
+
+```bash
+node bin/run.mjs collect main --head feat/x   # git → change-set.json
+# run prompts/summarize.md then prompts/tests.md → change-model.json
+node bin/run.mjs render change-model.json --change-set change-set.json
+```
+
+## File layout
+
+```
+bin/run.mjs      CLI (collect · render · verify · review)
+lib/             collector · renderer · validator · check-model
+prompts/         the two chat prompts for the model step
+schemas/         JSON schemas of the artifacts
+lib/profiles/    risk/test vocabulary (engineering)
+docs/DESIGN.md   this file
+```
+
 ## Non-goals
 
 PR/ticket enrichment, CI/PR posting, aggregation across branches, token/cost
