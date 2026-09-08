@@ -70,17 +70,23 @@ A is the working HEAD is flagged (`workingTreeDirty`, `dirtyCount`, stderr note
 
 ```
 collect <base> [--head <A>] [--repo <p>] [--out-dir <p>] [--run-id <n|auto>] [--context f.json]
-render  <change-model.json> [--out <f>] [--change-set <f>] [--out-dir <p>]
-verify  <change-set.json> <change-model.json>   |  verify [--repo <p>] [--run-id <n|auto>]
-review  <base> — collect + Phase B guidance, renders if model exists
+render  <change-model.json> [--change-set <f>] [--out-dir <p>]
+verify  <change-set.json> <change-model.json> | verify [--repo <p>] [--run-id <n|auto>]
+review  <base>  (same flags as collect)
 ```
+
+`review` is the everyday one-shot: it runs `collect` (Phase A) and prints the
+two prompts plus the render command for Phase B — then, if a
+`change-model.json` already exists next to the change-set, it validates and
+renders it immediately (Phase C). Manual flow below shows the same steps by
+hand.
 
 Path model: `--repo` = target git repo (default cwd, required if not a repo);
 `--out-dir` = artifact root (default `<repo>/.change-brief`); `--run-id`
 subfolder for run history, `auto` = `<A8>_<B8>_<ts>` (timestamp keeps re-runs
 distinct). Exit codes: 0 success · 1 abort/validation · 2 usage.
 
-Driving the phases manually (what `review` does under the hood):
+What `review` does under the hood (also available as separate steps):
 
 ```bash
 node bin/run.mjs collect main --head feat/x   # git → change-set.json
