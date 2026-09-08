@@ -1,7 +1,8 @@
 # Change Brief
 
-Turn any git change into a **one-page visual review brief** — what changed, the
-risks to check, concrete test ideas.
+Turn git changes into a **one-page visual review brief** - what changed, the risks to check, concrete test ideas.
+> The only network call is `git fetch`, nothing is uploaded. Requires Node ≥ 18.
+
 
 ```text
 branch A ──┐
@@ -13,40 +14,36 @@ Every brief is built in three phases:
 
 | | **Phase A** · collect | **Phase B** · model | **Phase C** · render |
 |---|---|---|---|
-| What it does | reads the git diff & snapshot | an LLM reads the change-set and writes a model | builds the HTML brief |
+| What it does | reads the git diff & snapshot | an LLM reads `change-set.json` and writes `change-model.json` | builds the HTML brief |
 | Input | branch/ref A vs B | `change-set.json` | `change-model.json` |
 | Output | `change-set.json` | `change-model.json` | `change-brief.html` |
-| LLM involved | no | **yes** | no |
-
-`review` chains all three — ask an LLM agent and it completes the model step
-for you (see Use cases below).
-
-Artifacts land in `<repo>/.change-brief/` — add it to `.gitignore`. The only
-network call is `git fetch`; nothing is uploaded.
+| Done by | CLI (`collect`) | an LLM in chat | CLI (`render`) |
 
 ---
 
 ## Use cases
 
-Every request runs the same three phases (`review` → model → HTML). What
-changes is which refs you compare, and which part of the brief you care about:
+Ask an agent; every request runs `review` → model → HTML and produces the same
+full brief — whether you then read it all, just the summary, or only the test
+ideas is up to you:
 
-| You say | Compares (Phase A) | You mainly look at |
-|---|---|---|
-| "Review my current branch vs `main`" | `review main` | the whole brief |
-| "Compare `feat/x` with `main`" | `review main --head feat/x` | the whole brief |
-| "Compare `feat/x` vs tag `v2.0`" | `review v2.0 --head feat/x` | the whole brief |
-| "Review `/path/to/repo`" | `review main --head feat/x --repo /path/to/repo` | the whole brief |
-| "What changed in this branch?" | `review main` | Summary & What changed sections |
-| "Give me test ideas for this change" | `review main` | Test ideas section |
+| You say | review runs |
+|---|---|
+| "Review the current branch vs `main`" | `review main` |
+| "Compare `feat/x` with `main`" | `review main --head feat/x` |
+| "Compare `feat/x` vs tag `v2.0`" | `review v2.0 --head feat/x` |
+| "What changed in this branch?" | `review main` |
+| "Give me test ideas for this change" | `review main` |
+| "Review the current branch of `/path/to/repo` vs `main`" | `review main --repo /path/to/repo` |
+| "Compare `feat/x` vs `main` in `/path/to/repo`" | `review main --head feat/x --repo /path/to/repo` |
 
 In a bare terminal (no agent), `review` stops after Phase A and prints the
 prompts + render command — the LLM step is yours. `verify` (model ↔ change-set
 check) and `collect` are available separately for scripts.
 
 Refs resolve locally first, then from origin; a missing ref aborts with a clear
-message. Requires Node ≥ 18 and git.
+message.
 
 ---
 
-Questions, scenarios, implementation details: see `docs/DESIGN.md`.
+More scenarios, implementation details: see `docs/DESIGN.md`.
