@@ -14,10 +14,10 @@ Every brief is built in three phases:
 
 | | **Phase A** · collect | **Phase B** · model | **Phase C** · render |
 |---|---|---|---|
-| What it does | reads the git diff & snapshot | an LLM reads `change-set.json` and writes `change-model.json` | builds the HTML brief |
+| What it does | `collect` git diff & snapshot | LLM **analyzes** `change-set.json` | `render` HTML brief |
 | Input | branch/ref A vs B | `change-set.json` | `change-model.json` |
 | Output | `change-set.json` | `change-model.json` | `change-brief.html` |
-| Done by | CLI (`collect`) | an LLM in chat | CLI (`render`) |
+| Done by | CLI (`collect`) | an LLM | CLI (`render`) |
 
 ---
 
