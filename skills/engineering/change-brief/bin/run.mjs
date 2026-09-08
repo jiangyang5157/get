@@ -60,7 +60,7 @@ function warnNotes(changeSet) {
 const VALUE_FLAGS = new Set(['out-dir', 'change-set', 'context', 'model', 'head', 'repo', 'run-id']);
 const KNOWN_FLAGS = new Set([...VALUE_FLAGS, 'help', 'h']);
 
-/** Parse argv. Throws on unknown --flag so typos (e.g. --out) fail loudly. */
+/** Parse argv. Throws on unknown --flag so typos fail loudly. */
 function parseFlags(argv) {
   const pos = [];
   const flags = {};
