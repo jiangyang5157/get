@@ -47,16 +47,21 @@ function chip(text, cls, title) {
   return `<span class="chip ${cls}"${title ? ` title="${escapeHtml(title)}"` : ''}>${escapeHtml(text)}</span>`;
 }
 
-function evidenceChip(ev) {
+function evidenceChip(ev, beyondText) {
   const txt = `${ev.path}:${ev.line}${ev.deleted ? ' (deleted)' : ''}`;
-  return `<span class="chip evidence" title="click to select">${escapeHtml(txt)}</span>`;
+  const cls = beyondText ? 'chip evidence evidence-beyond' : 'chip evidence';
+  const title = beyondText
+    ? 'anchor line is beyond the visible text — content not read by the model'
+    : 'click to select';
+  return `<span class="${cls}" title="${title}">${escapeHtml(txt)}</span>`;
 }
 
 function detailsRow(summary, body, open = false) {
   return `<details${open ? ' open' : ''}><summary>${summary}</summary>${body}</details>`;
 }
 
-function riskRow(r) {
+function riskRow(r, isVisible) {
+  const evChips = (r.evidence || []).map((ev) => evidenceChip(ev, !isVisible(ev))).join(' ');
   return `<li class="row">
   <div class="row-head">
     ${chip(r.id, 'chip-id')}
@@ -66,7 +71,7 @@ function riskRow(r) {
   </div>
   <div class="row-body">
     <p>${escapeHtml(r.rationale)}</p>
-    ${r.evidence && r.evidence.length ? `<p class="row-evidence">${r.evidence.map(evidenceChip).join(' ')}</p>` : ''}
+    ${r.evidence && r.evidence.length ? `<p class="row-evidence">${evChips}</p>` : ''}
   </div>
 </li>`;
 }
@@ -212,6 +217,16 @@ export function renderChangeBrief(model, changeSet = null) {
   </section>`;
 
   // ---- Risks ------------------------------------------------------------------
+  // visibility: which changed lines the model actually had text for (per file)
+  const textLines = new Map(); // path -> Set of visible added/deleted lines
+  for (const [p, rec] of Object.entries(changeSet?.changedLines || {})) {
+    const set = new Set();
+    for (const l of rec.text?.added || []) set.add(`a:${l.line}`);
+    for (const l of rec.text?.deleted || []) set.add(`d:${l.line}`);
+    textLines.set(p, set);
+  }
+  const isVisible = (ev) => (textLines.get(ev.path) || new Set()).has(`${ev.deleted ? 'd' : 'a'}:${ev.line}`);
+
   const risks = (model.risks || []).slice().sort((a, b) => (SEV_ORDER[a.severity] ?? 9) - (SEV_ORDER[b.severity] ?? 9));
   const visibleRisks = risks.slice(0, VISIBLE_RISKS);
   const hiddenRisks = risks.slice(VISIBLE_RISKS);
@@ -230,8 +245,8 @@ export function renderChangeBrief(model, changeSet = null) {
     : '';
   const riskSection = `<section>
     <h2>Risks</h2>
-    ${risks.length === 0 ? `<p class="empty">No risks flagged.</p>` : `<ul class="rows">${visibleRisks.map(riskRow).join('')}</ul>`}
-    ${hiddenRisks.length ? detailsRow(`Show all ${risks.length} risks`, `<ul class="rows">${hiddenRisks.map(riskRow).join('')}</ul>`) : ''}
+    ${risks.length === 0 ? `<p class="empty">No risks flagged.</p>` : `<ul class="rows">${visibleRisks.map((r) => riskRow(r, isVisible)).join('')}</ul>`}
+    ${hiddenRisks.length ? detailsRow(`Show all ${risks.length} risks`, `<ul class="rows">${hiddenRisks.map((r) => riskRow(r, isVisible)).join('')}</ul>`) : ''}
     ${missedHtml}
     ${scanned.length ? `<p class="dim checked">Checked: ${scanned.map((c) => chip(c, 'chip-cat', catHint(c))).join(' ')}</p>` : ''}
   </section>`;
@@ -272,6 +287,7 @@ h3.sub{font-size:13px;font-weight:600;margin:14px 0 4px}
 .summary-body{font-size:14px;margin:0;color:#2b3644}
 .chip{display:inline-block;border-radius:999px;padding:0 8px;font-size:11px;line-height:1.7;margin:1px 2px;background:var(--chip);border:1px solid var(--chipline);-webkit-user-select:all;user-select:all;white-space:nowrap}
 .chip.evidence{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;background:#f1f6fb;border-color:#c9d9ea}
+.chip.evidence-beyond{background:#fff7e0;border-color:#e3c878;color:#8a6100;border-style:dashed}
 .chip-id{background:#fff;color:var(--mut)}
 .chip-cat{background:#eef6ef}
 .chip-st{background:#f4f1ff;border-color:#ddd6f3}
