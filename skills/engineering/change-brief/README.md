@@ -26,6 +26,8 @@ is uploaded.
 
 ## Use cases
 
+### From a terminal
+
 | What you want | Command |
 |---|---|
 | Review the current branch vs `main` | `node bin/run.mjs review main` |
@@ -39,6 +41,21 @@ is uploaded.
 
 Refs resolve locally first, then from origin; a missing one aborts with a clear
 message. Requires Node ≥ 18 and git.
+
+### In chat (with an LLM agent)
+
+The CLI never calls an LLM — say one of these and the agent runs `review`, does
+the model step from the prompts, and renders the HTML:
+
+| You say | The agent does |
+|---|---|
+| "Review my current branch vs main" | `review main` → Phase B → HTML |
+| "Compare `feat/x` with `main`" | `review main --head feat/x` → Phase B → HTML |
+| "What changed in this branch?" | `review main` → opens the Summary |
+| "Give me test ideas / edge cases for this change" | `review` → fills the Test ideas section |
+
+In a plain terminal, `review` stops after Phase A and prints what to do next —
+Phase B (the LLM step) is yours to run from the printed prompts.
 
 ---
 

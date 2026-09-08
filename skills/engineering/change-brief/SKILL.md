@@ -6,27 +6,16 @@ disable-model-invocation: true
 
 # Change Brief
 
-Local-only, zero-dependency tool that turns any git branch/ref change into a
-curated HTML review brief. The HTML artifact has four sections:
-
-1. **Summary** — what the change does and why.
-2. **What changed** — per-directory churn rows (status mix + line counts),
-   individual files expandable with the reason each file changed.
-3. **Risks** — for reviewers, each with severity/category and copyable
-   `file:line` evidence chips.
-4. **Test ideas** — suggested happy-path and edge cases for authors/testers.
-
-It mimics a good reviewer, not a test-automation engine: e2e suggestions are
-behaviour-level (Given/When/Then) and never invent screens/accounts/IDs —
-app-specific nouns stay `{PLACEHOLDER}` for the author to fill.
+Produces an HTML review brief (Summary · What changed · Risks with `file:line`
+evidence · Test ideas) for any git branch/ref change. Three phases: git
+collection, an LLM model step, a deterministic render. The CLI never calls an
+LLM.
 
 ## When to use
 
 The user wants to understand/review what one branch/ref changes against another
-before opening or commenting on a PR/CR, compare two branches/refs, or get
-structured edge-case ideas for a change. Works from any directory: the target
-repo defaults to the cwd (when it is a git repo) or is passed explicitly with
-`--repo /path/to/repo`.
+before a PR/CR, compare two branches/refs, or get test/edge-case ideas for a
+change. Runs from any directory (`--repo <path>` when not inside the target).
 
 ## Workflow
 
@@ -38,24 +27,20 @@ Both resolve locally first, then from origin. Diff direction is `B...A`.
 node <this-skill-dir>/bin/run.mjs review main
 # A = specific branch/ref from anywhere (no checkout needed)
 node <this-skill-dir>/bin/run.mjs review main --head feat/x --repo /path/to/repo
-# keep artifacts outside the repo and version each run
-node <this-skill-dir>/bin/run.mjs review main --head feat/x --repo /path/to/repo \
-     --out-dir /somewhere --run-id auto
 ```
-`review` runs Phase A, prints Phase B instructions, and renders automatically
-if a model already exists. Artifacts land in
-`<out-dir>[/<run-id>]/` (default `<repo>/.change-brief/`):
-`change-set.json`, `change-model.json`, `change-brief.html`.
+`review` runs Phase A, prints the Phase B instructions, and renders if a model
+already exists. Artifacts: `change-set.json` · `change-model.json` ·
+`change-brief.html` in `<out-dir>[/<run-id>]/` (default `<repo>/.change-brief/`).
 
-- **Phase A** (deterministic, no LLM): run `review`/`collect`, then read the
-  printed `change-set.json`.
-- **Phase B** (LLM — do it in THIS conversation): read that `change-set.json`;
-  run `prompts/summarize.md`, then `prompts/tests.md` (same conversation);
-  write the single final JSON to the `change-model.json` path that `review`
-  printed (default `.change-brief/change-model.json`). You may hand-edit it and
-  re-render.
-- **Phase C** (deterministic): `render <model> --change-set <change-set>`
-  (the printed command is copy-paste ready), then open the HTML.
+1. **Phase A** — deterministic, no LLM. Run `review`/`collect`, then read the
+   printed `change-set.json`.
+2. **Phase B** — the LLM step, done in THIS conversation: read that
+   `change-set.json`; run `prompts/summarize.md`, then `prompts/tests.md`;
+   write the single final JSON to the `change-model.json` path `review` printed
+   (default `.change-brief/change-model.json`). Hand-edits allowed; re-render
+   afterwards.
+3. **Phase C** — deterministic. Run the copy-paste-ready
+   `render <model> --change-set <change-set>` command, then open the HTML.
 
 ## Guardrails for Phase B
 
@@ -73,10 +58,3 @@ if a model already exists. Artifacts land in
 - Never echo secret values or PII — locations only.
 - `change-set.empty: true` → output the empty-branch model (see
   `prompts/summarize.md`).
-
-## Notes
-
-- Requires Node ≥ 18 and git; network needed for `git fetch origin`.
-- Everything stays local; the CLI never calls an LLM and never uploads.
-- Add `.change-brief/` to `.gitignore` when artifacts live inside the repo.
-- Full CLI and the level × specificity test contract: see README.md.
