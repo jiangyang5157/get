@@ -1,7 +1,7 @@
 # Change Brief
 
 Turn any git change into a **one-page visual review brief** — what changed, the
-risks to check, concrete test ideas. Local, no upload, no dependencies.
+risks to check, concrete test ideas.
 
 ```text
 branch A ──┐
@@ -16,15 +16,13 @@ Every brief is built in three phases:
 | What it does | reads the git diff & snapshot | an LLM reads the change-set and writes a model | builds the HTML brief |
 | Input | branch/ref A vs B | `change-set.json` | `change-model.json` |
 | Output | `change-set.json` | `change-model.json` | `change-brief.html` |
-| LLM involved | no | **yes** (in chat) | no |
+| LLM involved | no | **yes** | no |
 
-`review` chains all three. Run it yourself and it stops after Phase A, printing
-exactly what to do next — or just ask an LLM agent (see below), which does the
-Phase B step for you.
+`review` chains all three — ask an LLM agent and it completes the model step
+for you (see Use cases below).
 
-Artifacts land in `<repo>/.change-brief/` — add it to `.gitignore`. Hand-edit
-the model JSON and re-render anytime. Only network call: `git fetch`. Nothing
-is uploaded.
+Artifacts land in `<repo>/.change-brief/` — add it to `.gitignore`. The only
+network call is `git fetch`; nothing is uploaded.
 
 ---
 
