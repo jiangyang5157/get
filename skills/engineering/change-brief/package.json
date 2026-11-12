@@ -1,8 +1,0 @@
-{
-  "name": "change-brief",
-  "version": "1.0.0",
-  "description": "git diff → one LLM pass → HTML review brief: what changed, risks, test ideas.",
-  "engines": {
-    "node": ">=18"
-  }
-}
