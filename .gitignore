@@ -1,20 +1,2 @@
-# File System
+#
 .DS_Store
-.change-brief/
-
-# IDE
-.vscode/
-.obsidian/
-
-# Environment and Keys
-.env
-
-# Logs
-*.log
-
-# Python
-venv/
-__pycache__/
-*.py[cod]
-*$py.class
-.pytest_cache/
