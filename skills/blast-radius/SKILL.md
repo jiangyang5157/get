@@ -8,7 +8,7 @@ disable-model-invocation: true
 
 Find what a change breaks somewhere else, before it ships. Use for "blast radius of X", "what could this break", or reviewing a small diff you don't trust yet.
 
-Run `how` first when the subsystem is unfamiliar: it tells you what the code does, and a change you don't understand is a change you can't judge. Blast radius tells you what it breaks somewhere else.
+Read [how](../how/SKILL.md) and follow it first when the subsystem is unfamiliar: it tells you what the code does, and a change you don't understand is a change you can't judge. Blast radius tells you what it breaks somewhere else.
 
 Listing the callers is not the job. The agent can grep those in a second. The job is the breakage grep won't show you.
 
@@ -45,6 +45,6 @@ Step 4 is usually one small script that imports the same library the app ships a
 - **Cleared.** What you checked and why it's fine.
 - **Before you merge.** The cheapest test or repro that catches the real bug, including the script you wrote.
 
-Write it through `unslop`, cite real code, and strip anything private before it goes anywhere public.
+Read [unslop](../unslop/SKILL.md) and write through it, cite real code, and strip anything private before it goes anywhere public.
 
 **Reply:** the writeup above, with the one safety fact either proven or marked unproven.
