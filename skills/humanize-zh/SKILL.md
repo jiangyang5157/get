@@ -1,6 +1,7 @@
 ---
 name: humanize-zh
 description: 去除文本中的 AI 生成痕迹。适用于编辑或审阅文本，使其听起来更自然、更像人类书写。
+disable-model-invocation: true
 ---
 
 ## 你的任务

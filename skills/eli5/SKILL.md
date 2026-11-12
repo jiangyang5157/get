@@ -1,6 +1,7 @@
 ---
 name: eli5
 description: "Explain a topic for a complete beginner with a simple visual story. Use when the user types /eli5 <topic>, asks for an ELI5 explanation, or wants a dead-simple picture explainer of how something works."
+disable-model-invocation: true
 ---
 
 # eli5
