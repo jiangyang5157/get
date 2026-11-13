@@ -1,5 +1,5 @@
 ---
-name: Prompt guidance
+name: prompt-guidance
 description: Use when creating or editing AI skills, agents, prompts, or instruction files, including tightening existing instruction text.
 paths: ["**/SKILL.md", "**/agents/**/*.md", "**/prompts/**/*.md", "**/*.instructions.md", "**/copilot-instructions.md", "**/AGENTS.md"]
 ---
