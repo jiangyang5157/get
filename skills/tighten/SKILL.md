@@ -1,6 +1,6 @@
 ---
 name: tighten
-description: "Rewrite instruction text so every line earns its place: cut wording that changes nothing, keep safety and exception paths, write in the imperative with the constraint first. Use when a prompt, skill, or instruction file is vague, bloated, or repeats itself. Use for /tighten."
+description: "Rewrite a prompt, skill, or instruction file so every line earns its place. Use when the text is vague, bloated, or repeats itself. Use for /tighten."
 disable-model-invocation: true
 ---
 
